@@ -1,0 +1,19 @@
+language: elixir
+
+elixir:
+  - 1.5.2
+
+otp_release:
+  - 20.1
+
+services:
+  - postgresql
+
+before_script:
+  - MIX_ENV=test mix do ecto.create
+
+sudo: required
+dist: trusty
+
+addons:
+  postgresql: "9.6"
