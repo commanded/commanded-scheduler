@@ -10,4 +10,8 @@ defmodule Commanded.Scheduler.Router do
   identify Schedule, by: :schedule_uuid
 
   dispatch [ScheduleOnce, ScheduleRecurring], to: Schedule
+
+  def schedule_prefix do
+    Application.get_env(:commanded_scheduler, :schedule_prefix)
+  end
 end
