@@ -1,3 +1,6 @@
 defmodule Commanded.Scheduler.Repo do
-  use Ecto.Repo, otp_app: :commanded_scheduler
+  @moduledoc false
+  
+  use Ecto.Repo,
+    otp_app: :commanded_scheduler
 end

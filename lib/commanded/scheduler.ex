@@ -3,8 +3,4 @@ defmodule Commanded.Scheduler do
   One-off and recurring command scheduler for
   [Commanded](https://hex.pm/packages/commanded) CQRS/ES applications.
   """
-
-  use Commanded.Projections.Ecto,
-    name: "Commanded.Scheduler",
-    repo: Commanded.Scheduler.Repo
 end

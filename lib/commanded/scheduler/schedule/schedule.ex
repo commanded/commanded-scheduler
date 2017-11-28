@@ -1,10 +1,10 @@
 defmodule Commanded.Scheduler.Schedule do
-  alias Commanded.Scheduler.Commands.{
+  @moduledoc false
+  
+  alias Commanded.Scheduler.{
     ScheduleOnce,
-    ScheduleRecurring,
-  }
-  alias Commanded.Scheduler.Events.{
     ScheduledOnce,
+    ScheduleRecurring,
     ScheduledRecurring,
   }
   alias Commanded.Scheduler.Schedule

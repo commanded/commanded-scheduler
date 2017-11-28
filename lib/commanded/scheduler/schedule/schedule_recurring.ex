@@ -1,4 +1,4 @@
-defmodule Commanded.Scheduler.Commands.ScheduleRecurring do
+defmodule Commanded.Scheduler.ScheduleRecurring do
   @moduledoc """
   Schedule a recurring command using a cron job schedule definition.
 

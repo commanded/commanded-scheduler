@@ -1,4 +1,4 @@
-defmodule Commanded.Scheduler.Events.ScheduledRecurring do
+defmodule Commanded.Scheduler.ScheduledRecurring do
   @type t :: %__MODULE__{
     schedule_uuid: String.t,
     cancellation_token: String.t | nil,

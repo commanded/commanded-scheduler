@@ -1,4 +1,4 @@
-defmodule Commanded.Scheduler.Commands.ScheduleOnce do
+defmodule Commanded.Scheduler.ScheduleOnce do
   @moduledoc """
   Schedule a one-off command due at the given date/time (in UTC).
   """
