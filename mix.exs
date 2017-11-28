@@ -39,6 +39,7 @@ defmodule Commanded.Scheduler.Mixfile do
       {:commanded_ecto_projections, "~> 0.6"},
       {:crontab, "~> 1.1"},
       {:ecto, "~> 2.2"},
+      {:ex2ms, "~> 1.5"},
       {:mix_test_watch, "~> 0.5", only: :dev, runtime: false},
       {:postgrex, ">= 0.0.0"},
       {:timex, "~> 3.1"},
