@@ -29,6 +29,7 @@ defmodule Commanded.Scheduler.Mixfile do
       "ecto.setup":         ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset":         ["ecto.drop", "ecto.setup"],
       "test":               ["test --no-start"],
+      "test.watch":         ["test.watch --no-start"],
     ]
   end
 

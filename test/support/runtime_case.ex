@@ -2,6 +2,8 @@ defmodule Commanded.Scheduler.RuntimeCase do
   use ExUnit.CaseTemplate
 
   setup do
+    Application.stop(:commanded_scheduler)
+    
     {:ok, event_store} = Commanded.EventStore.Adapters.InMemory.start_link()
 
     Application.ensure_all_started(:commanded)

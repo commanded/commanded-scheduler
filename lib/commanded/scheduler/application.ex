@@ -6,6 +6,7 @@ defmodule Commanded.Scheduler.Application do
   def start(_type, _args) do
     children = [
       Commanded.Scheduler.Repo,
+      Commanded.Scheduler.Jobs,
       Commanded.Scheduler.JobScheduler,
     ]
 

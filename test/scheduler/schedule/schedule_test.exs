@@ -1,4 +1,4 @@
-defmodule Commanded.SchedulerTest do
+defmodule Commanded.ScheduleTest do
   use Commanded.Scheduler.RuntimeCase
 
   import Commanded.Assertions.EventAssertions
@@ -20,7 +20,7 @@ defmodule Commanded.SchedulerTest do
       assert_receive_event ScheduledOnce, fn scheduled ->
         assert scheduled.schedule_uuid == context.schedule_uuid
         assert scheduled.command == context.command
-        assert scheduled.command_type == "Elixir.Commanded.SchedulerTest.ExampleCommand"
+        assert scheduled.command_type == "Elixir.Commanded.ScheduleTest.ExampleCommand"
         assert scheduled.due_at == context.due_at
       end
     end
@@ -33,7 +33,7 @@ defmodule Commanded.SchedulerTest do
       assert_receive_event ScheduledRecurring, fn scheduled ->
         assert scheduled.schedule_uuid == context.schedule_uuid
         assert scheduled.command == context.command
-        assert scheduled.command_type == "Elixir.Commanded.SchedulerTest.ExampleCommand"
+        assert scheduled.command_type == "Elixir.Commanded.ScheduleTest.ExampleCommand"
         assert scheduled.schedule == "@daily"
       end
     end
