@@ -32,6 +32,10 @@ defmodule Commanded.Scheduler.Jobs do
     GenServer.call(__MODULE__, {:pending_jobs, now})
   end
 
+  def running_jobs do
+    GenServer.call(__MODULE__, :running_jobs)
+  end
+
   def run_jobs(now) do
     GenServer.call(__MODULE__, {:run_jobs, now})
   end
@@ -64,9 +68,11 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   def handle_call({:pending_jobs, now}, _from, %Jobs{} = state) do
-    reply = pending_jobs(now, state)
+    {:reply, pending_jobs(now, state), state}
+  end
 
-    {:reply, reply, state}
+  def handle_call(:running_jobs, _from, %Jobs{} = state) do
+    {:reply, running_jobs(state), state}
   end
 
   def handle_call({:run_jobs, now}, _from, %Jobs{} = state) do
@@ -86,6 +92,14 @@ defmodule Commanded.Scheduler.Jobs do
 
     predicate = fun do
       {_name, due_at, status, job} when due_at <= ^due_at_epoch and status == :pending -> job
+    end
+
+    :ets.select(schedule_table, predicate)
+  end
+
+  defp running_jobs(%Jobs{schedule_table: schedule_table}) do
+    predicate = fun do
+      {_name, _due_at, status, job} when status == :running -> job
     end
 
     :ets.select(schedule_table, predicate)

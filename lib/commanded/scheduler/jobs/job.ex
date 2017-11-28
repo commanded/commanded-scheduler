@@ -52,7 +52,7 @@ defmodule Commanded.Scheduler.Job do
 
       send(self(), :execute)
 
-      {:no_reply, %Job{retries: retries + 1}}
+      {:noreply, %Job{state | retries: retries + 1}}
     end
   end
 

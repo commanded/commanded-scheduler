@@ -12,7 +12,7 @@ defmodule Commanded.Scheduler.JobSupervisor do
   end
 
   def init(_arg) do
-    job_spec = Supervisor.child_spec(Job, start: {Job, :start_link, []})
+    job_spec = Supervisor.child_spec(Job, start: {Job, :start_link, []}, restart: :temporary)
 
     Supervisor.init([
       job_spec,

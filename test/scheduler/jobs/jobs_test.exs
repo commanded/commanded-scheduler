@@ -10,20 +10,26 @@ defmodule Commanded.JobsTest do
     end
   end
 
+  defmodule ErrorJob do
+    def execute(name, reply_to) do
+      send(reply_to, {:execute, name})
+      {:error, :failed}
+    end
+  end
+
   describe "schedule once" do
     test "should schedule job" do
       run_at = utc_now()
       Jobs.schedule_once("once", {Job, :execute, [self()]}, run_at)
 
-      jobs = Jobs.scheduled_jobs()
-
-      assert jobs == [
+      assert Jobs.scheduled_jobs() == [
         %OneOffJob{
           name: "once",
           mfa: {Job, :execute, [self()]},
           run_at: run_at,
         }
       ]
+      assert Jobs.running_jobs() == []
     end
   end
 
@@ -31,15 +37,14 @@ defmodule Commanded.JobsTest do
     test "should schedule job" do
       Jobs.schedule_recurring("recurring", {Job, :execute, [self()]}, "@daily")
 
-      jobs = Jobs.scheduled_jobs()
-
-      assert jobs == [
+      assert Jobs.scheduled_jobs() == [
         %RecurringJob{
           name: "recurring",
           mfa: {Job, :execute, [self()]},
           schedule: "@daily",
         }
       ]
+      assert Jobs.running_jobs() == []
     end
   end
 
@@ -59,23 +64,39 @@ defmodule Commanded.JobsTest do
           run_at: past,
         }
       ]
+      assert Jobs.running_jobs() == []
     end
   end
 
   describe "run jobs" do
-    @tag :wip
     test "should execute pending jobs due now" do
       now = utc_now()
-      past = NaiveDateTime.add(now, -60, :second)
-      future = NaiveDateTime.add(now, 60, :second)
 
-      Jobs.schedule_once("once-due", {Job, :execute, [self()]}, past)
-      Jobs.schedule_once("once-not-due", {Job, :execute, [self()]}, future)
-
+      Jobs.schedule_once("once", {Job, :execute, [self()]}, now)
       Jobs.run_jobs(now)
 
-      assert_receive {:execute, "once-due"}
+      assert_receive {:execute, "once"}
+
+      :timer.sleep 100
+
       assert Jobs.pending_jobs(now) == []
+      assert Jobs.running_jobs() == []
+    end
+
+    test "should retry failed jobs" do
+      now = utc_now()
+
+      Jobs.schedule_once("once", {ErrorJob, :execute, [self()]}, now)
+      Jobs.run_jobs(now)
+
+      assert_receive {:execute, "once"}
+      assert_receive {:execute, "once"}
+      assert_receive {:execute, "once"}
+
+      refute_receive {:execute, "once"}
+
+      assert Jobs.pending_jobs(now) == []
+      assert Jobs.running_jobs() == []
     end
   end
 
