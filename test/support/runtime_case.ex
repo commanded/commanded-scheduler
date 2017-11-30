@@ -30,8 +30,7 @@ defmodule Commanded.Scheduler.RuntimeCase do
   @truncate_tables_statement """
     TRUNCATE TABLE
       projection_versions,
-      schedules,
-      schema_migrations
+      schedules
     RESTART IDENTITY;
   """
 

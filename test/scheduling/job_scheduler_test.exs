@@ -21,18 +21,17 @@ defmodule Commanded.JobSchedulerTest do
       assert schedule.due_at == context.due_at
     end
 
-    @tag :wip
     test "should schedule job", context do
-      :timer.sleep 100
-
-      assert Jobs.scheduled_jobs() == [
-        %OneOffJob{
-          name: context.schedule_uuid,
-          module: Dispatcher,
-          args: context.command,
-          run_at: context.due_at,
-        }
-      ]
+      Wait.until(fn ->
+        assert Jobs.scheduled_jobs() == [
+          %OneOffJob{
+            name: context.schedule_uuid,
+            module: Dispatcher,
+            args: context.command,
+            run_at: context.due_at,
+          }
+        ]
+      end)
     end
   end
 

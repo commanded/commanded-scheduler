@@ -19,14 +19,14 @@ defmodule ExampleDomain.TicketBooking do
     %TicketBooking{ticket_uuid: nil},
     %ReserveTicket{} = reserve_ticket
   ) do
-    struct(TicketReserved, reserve_ticket)
+    struct(TicketReserved, Map.from_struct(reserve_ticket))
   end
 
   def execute(
     %TicketBooking{status: :pending},
     %TimeoutReservation{} = timeout
   ) do
-    struct(ReservationExpired, timeout)
+    struct(ReservationExpired, Map.from_struct(timeout))
   end
 
   def execute(

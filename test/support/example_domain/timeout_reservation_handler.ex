@@ -2,7 +2,7 @@ defmodule ExampleDomain.TimeoutReservationHandler do
   use Commanded.Event.Handler, name: __MODULE__
 
   alias Commanded.Scheduler.ScheduleOnce
-  alias ExampleDomain.Router
+  alias ExampleDomain.TicketRouter
   alias ExampleDomain.TicketBooking.Commands.TimeoutReservation
   alias ExampleDomain.TicketBooking.Events.TicketReserved
 
@@ -20,6 +20,6 @@ defmodule ExampleDomain.TimeoutReservationHandler do
       due_at: expires_at,
     }
 
-    Router.dispatch(schedule_once)
+    TicketRouter.dispatch(schedule_once)
   end
 end
