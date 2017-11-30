@@ -1,6 +1,6 @@
 defmodule Commanded.Scheduler.Schedule do
   @moduledoc false
-  
+
   alias Commanded.Scheduler.{
     ScheduleOnce,
     ScheduledOnce,
@@ -14,7 +14,7 @@ defmodule Commanded.Scheduler.Schedule do
     scheduled: [],
   ]
 
-  defmodule OneOffSchedule do
+  defmodule OneOffJob do
     defstruct [
       :cancellation_token,
       :command,
@@ -22,7 +22,7 @@ defmodule Commanded.Scheduler.Schedule do
     ]
   end
 
-  defmodule RecurringSchedule do
+  defmodule RecurringJob do
     defstruct [
       :cancellation_token,
       :command,
@@ -48,7 +48,7 @@ defmodule Commanded.Scheduler.Schedule do
   ) do
     %Schedule{schedule |
       schedule_uuid: schedule_uuid,
-      scheduled: [struct(OneOffSchedule, Map.from_struct(once)) | scheduled],
+      scheduled: [struct(OneOffJob, Map.from_struct(once)) | scheduled],
     }
   end
 
@@ -58,7 +58,7 @@ defmodule Commanded.Scheduler.Schedule do
   ) do
     %Schedule{schedule |
       schedule_uuid: schedule_uuid,
-      scheduled: [struct(RecurringSchedule, Map.from_struct(recurring)) | scheduled],
+      scheduled: [struct(RecurringJob, Map.from_struct(recurring)) | scheduled],
     }
   end
 

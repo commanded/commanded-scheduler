@@ -1,10 +1,13 @@
 defmodule Commanded.Scheduler.RuntimeCase do
   use ExUnit.CaseTemplate
 
+  alias Commanded.Scheduler.Repo
+
   setup do
     Application.stop(:commanded_scheduler)
-    
+
     {:ok, event_store} = Commanded.EventStore.Adapters.InMemory.start_link()
+    clear_database()
 
     Application.ensure_all_started(:commanded)
     Application.ensure_all_started(:commanded_scheduler)
@@ -22,5 +25,23 @@ defmodule Commanded.Scheduler.RuntimeCase do
 
     ref = Process.monitor(pid)
     assert_receive {:DOWN, ^ref, _, _, _}, 5_000
+  end
+
+  @truncate_tables_statement """
+    TRUNCATE TABLE
+      projection_versions,
+      schedules,
+      schema_migrations
+    RESTART IDENTITY;
+  """
+
+  defp clear_database() do
+    database_config = Application.get_env(:commanded_scheduler, Repo)
+
+    Application.ensure_all_started(:postgrex)
+
+    with {:ok, conn} <- Postgrex.start_link(database_config) do
+      Postgrex.query!(conn, @truncate_tables_statement, [])
+    end
   end
 end

@@ -5,7 +5,7 @@ defmodule Commanded.SchedulerTest do
 
   defmodule Job do
     def execute(name, [reply_to]) do
-      send(reply_to, :executed)
+      send(reply_to, {:executed, name})
       :ok
     end
   end
