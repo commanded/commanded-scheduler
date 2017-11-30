@@ -9,57 +9,38 @@ defmodule Commanded.Scheduler.Schedule do
   }
   alias Commanded.Scheduler.Schedule
 
-  defstruct [
-    schedule_uuid: nil,
-    scheduled: [],
-  ]
-
-  defmodule OneOffJob do
-    defstruct [
-      :cancellation_token,
-      :command,
-      :due_at
-    ]
-  end
-
-  defmodule RecurringJob do
-    defstruct [
-      :cancellation_token,
-      :command,
-      :due_at
-    ]
-  end
+  defstruct [:schedule_uuid]
 
   # public API
 
-  def execute(%Schedule{}, %ScheduleOnce{command: command} = once) do
+  def execute(%Schedule{schedule_uuid: nil}, %ScheduleOnce{command: command} = once) do
     struct(ScheduledOnce, Map.from_struct(once)) |> include_command_type(command)
   end
 
-  def execute(%Schedule{}, %ScheduleRecurring{command: command} = recurring) do
+  def execute(%Schedule{}, %ScheduleOnce{}),
+    do: {:error, :already_scheduled}
+
+  def execute(%Schedule{schedule_uuid: nil}, %ScheduleRecurring{command: command} = recurring) do
     struct(ScheduledRecurring, Map.from_struct(recurring)) |> include_command_type(command)
   end
+
+  def execute(%Schedule{}, %ScheduleRecurring{}),
+    do: {:error, :already_scheduled}
 
   # state mutators
 
   def apply(
-    %Schedule{scheduled: scheduled} = schedule,
-    %ScheduledOnce{schedule_uuid: schedule_uuid} = once
-  ) do
-    %Schedule{schedule |
-      schedule_uuid: schedule_uuid,
-      scheduled: [struct(OneOffJob, Map.from_struct(once)) | scheduled],
-    }
+    %Schedule{} = schedule,
+    %ScheduledOnce{schedule_uuid: schedule_uuid})
+  do
+    %Schedule{schedule | schedule_uuid: schedule_uuid}
   end
 
   def apply(
-    %Schedule{scheduled: scheduled} = schedule,
-    %ScheduledRecurring{schedule_uuid: schedule_uuid} = recurring
-  ) do
-    %Schedule{schedule |
-      schedule_uuid: schedule_uuid,
-      scheduled: [struct(RecurringJob, Map.from_struct(recurring)) | scheduled],
-    }
+    %Schedule{} = schedule,
+    %ScheduledRecurring{schedule_uuid: schedule_uuid})
+  do
+    %Schedule{schedule | schedule_uuid: schedule_uuid}
   end
 
   # private helpers

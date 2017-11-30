@@ -6,7 +6,6 @@ defmodule Commanded.Scheduler.JobScheduler do
 
     @primary_key {:schedule_uuid, :string, []}
     schema "schedules" do
-      field :cancellation_token, :string
       field :command, :map
       field :command_type, :string
       field :due_at, :naive_datetime
@@ -20,13 +19,13 @@ defmodule Commanded.Scheduler.JobScheduler do
     name: "Commanded.Scheduler",
     repo: Commanded.Scheduler.Repo
 
+  alias Commanded.Scheduler
+  alias Commanded.Scheduler.{Dispatcher,ScheduledOnce,ScheduledRecurring}
   alias Commanded.Scheduler.JobScheduler.Schedule
-  alias Commanded.Scheduler.{ScheduledOnce,ScheduledRecurring}
 
   project %ScheduledOnce{} = once do
     Ecto.Multi.insert(multi, :schedule_once, %Schedule{
       schedule_uuid: once.schedule_uuid,
-      cancellation_token: once.cancellation_token,
       command: Map.from_struct(once.command),
       command_type: once.command_type,
       due_at: once.due_at,
@@ -36,14 +35,15 @@ defmodule Commanded.Scheduler.JobScheduler do
   project %ScheduledRecurring{} = recurring do
     Ecto.Multi.insert(multi, :schedule_once, %Schedule{
       schedule_uuid: recurring.schedule_uuid,
-      cancellation_token: recurring.cancellation_token,
       command: Map.from_struct(recurring.command),
       command_type: recurring.command_type,
       schedule: recurring.schedule,
     })
   end
 
-  def after_update(_event, _metadata, _changes) do
-    :ok
+  def after_update(%ScheduledOnce{} = once, _metadata, _changes) do
+    Scheduler.schedule_once(once.schedule_uuid, Dispatcher, once.command, once.due_at)
   end
+
+  def after_update(_event, _metadata, _changes), do: :ok
 end

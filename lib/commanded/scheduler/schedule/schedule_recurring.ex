@@ -14,13 +14,11 @@ defmodule Commanded.Scheduler.ScheduleRecurring do
 
   @type t :: %__MODULE__{
     schedule_uuid: String.t,
-    cancellation_token: String.t | nil,
     command: struct(),
     schedule: String.t,
   }
   defstruct [
     :schedule_uuid,
-    :cancellation_token,
     :command,
     :schedule,
   ]

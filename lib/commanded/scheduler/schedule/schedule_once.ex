@@ -5,13 +5,11 @@ defmodule Commanded.Scheduler.ScheduleOnce do
 
   @type t :: %__MODULE__{
     schedule_uuid: String.t,
-    cancellation_token: String.t | nil,
     command: struct(),
     due_at: NaiveDateTime.t,
   }
   defstruct [
     :schedule_uuid,
-    :cancellation_token,
     :command,
     :due_at,
   ]

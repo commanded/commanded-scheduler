@@ -4,8 +4,8 @@ defmodule Commanded.JobSchedulerTest do
   import Commanded.Scheduler.Factory
 
   alias Commanded.Helpers.Wait
-  alias Commanded.Scheduler.Repo
   alias Commanded.Scheduler.JobScheduler.Schedule
+  alias Commanded.Scheduler.{Dispatcher,Jobs,OneOffJob,Repo}
 
   describe "schedule once" do
     setup [:schedule_once]
@@ -13,13 +13,26 @@ defmodule Commanded.JobSchedulerTest do
     test "should persist scheduled job", context do
       {:ok, schedule} = get_schedule(context.schedule_uuid)
 
-      assert schedule.cancellation_token == context.cancellation_token
       assert schedule.command == %{
         "aggregate_uuid" => context.aggregate_uuid,
         "data" => "example",
       }
       assert schedule.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
       assert schedule.due_at == context.due_at
+    end
+
+    @tag :wip
+    test "should schedule job", context do
+      :timer.sleep 100
+
+      assert Jobs.scheduled_jobs() == [
+        %OneOffJob{
+          name: context.schedule_uuid,
+          module: Dispatcher,
+          args: context.command,
+          run_at: context.due_at,
+        }
+      ]
     end
   end
 
