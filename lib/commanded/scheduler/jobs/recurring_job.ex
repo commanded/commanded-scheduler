@@ -1,7 +1,8 @@
 defmodule Commanded.Scheduler.RecurringJob do
   defstruct [
     :name,
-    :mfa,
+    :module,
+    :args,
     :schedule,
   ]
 end

@@ -7,8 +7,8 @@ defmodule Commanded.Scheduler.JobSupervisor do
     Supervisor.start_link(__MODULE__, arg, name: __MODULE__)
   end
 
-  def start_job(name, mfa) do
-    Supervisor.start_child(__MODULE__, [name, mfa])
+  def start_job(name, module, args) do
+    Supervisor.start_child(__MODULE__, [name, module, args])
   end
 
   def init(_arg) do

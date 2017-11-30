@@ -1,7 +1,8 @@
 defmodule Commanded.Scheduler.OneOffJob do
   defstruct [
     :name,
-    :mfa,
+    :module,
+    :args,
     :run_at,
   ]
 end

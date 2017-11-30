@@ -5,14 +5,17 @@ defmodule Commanded.Scheduler.Job do
 
   alias Commanded.Scheduler.Job
 
+  @callback execute(name :: any, args :: any) :: :ok
+
   defstruct [
     :name,
-    :mfa,
+    :module,
+    :args,
     retries: 0,
   ]
 
-  def start_link(name, {_module, _function, _args} = mfa) do
-    GenServer.start_link(__MODULE__, %Job{name: name, mfa: mfa})
+  def start_link(name, module, args) do
+    GenServer.start_link(__MODULE__, %Job{name: name, module: module, args: args})
   end
 
   def init(%Job{} = state) do
@@ -21,14 +24,15 @@ defmodule Commanded.Scheduler.Job do
     {:ok, state}
   end
 
-  def handle_info(:execute, %Job{name: name, mfa: {module, fun, args}} = state) do
-    task = Task.Supervisor.async_nolink(Commanded.Scheduler.JobRunner, module, fun, [name | args])
+  def handle_info(:execute, %Job{name: name, module: module, args: args} = state) do
+    task = Task.Supervisor.async_nolink(Commanded.Scheduler.JobRunner, module, :execute, [name, args])
+    timeout = job_timeout()
 
     result =
-      case Task.yield(task, :infinity) do
+      case Task.yield(task, timeout) || Task.shutdown(task) do
         {:ok, result} -> result
         {:exit, reason} -> {:error, reason}
-        nil -> {:error, :failed}
+        nil -> {:error, :timeout}
     end
 
     case result do
@@ -59,4 +63,5 @@ defmodule Commanded.Scheduler.Job do
   defp describe(%Job{name: name}), do: "Scheduled job #{inspect(name)}"
 
   defp max_retries, do: Application.get_env(:commanded_scheduler, :max_retries, 3)
+  defp job_timeout, do: Application.get_env(:commanded_scheduler, :job_timeout, :infinity)
 end

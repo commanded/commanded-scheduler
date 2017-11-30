@@ -13,12 +13,12 @@ defmodule Commanded.Scheduler.Jobs do
     GenServer.start_link(__MODULE__, args, [name: __MODULE__])
   end
 
-  def schedule_once(name, {_module, _function, _args} = mfa, %NaiveDateTime{} = run_at) do
-    GenServer.call(__MODULE__, {:schedule_once, name, mfa, run_at})
+  def schedule_once(name, module, args, %NaiveDateTime{} = run_at) do
+    GenServer.call(__MODULE__, {:schedule_once, name, module, args, run_at})
   end
 
-  def schedule_recurring(name, {_module, _function, _args} = mfa, schedule) do
-    GenServer.call(__MODULE__, {:schedule_recurring, name, mfa, schedule})
+  def schedule_recurring(name, module, args, schedule) do
+    GenServer.call(__MODULE__, {:schedule_recurring, name, module, args, schedule})
   end
 
   @doc """
@@ -49,14 +49,14 @@ defmodule Commanded.Scheduler.Jobs do
     {:ok, state}
   end
 
-  def handle_call({:schedule_once, name, mfa, run_at}, _from, %Jobs{schedule_table: schedule_table} = state) do
-    :ets.insert(schedule_table, {name, epoch_seconds(run_at), :pending, %OneOffJob{name: name, mfa: mfa, run_at: run_at}})
+  def handle_call({:schedule_once, name, module, args, run_at}, _from, %Jobs{schedule_table: schedule_table} = state) do
+    :ets.insert(schedule_table, {name, epoch_seconds(run_at), :pending, %OneOffJob{name: name, module: module, args: args, run_at: run_at}})
 
     {:reply, :ok, state}
   end
 
-  def handle_call({:schedule_recurring, name, mfa, schedule}, _from, %Jobs{schedule_table: schedule_table} = state) do
-    :ets.insert(schedule_table, {name, nil, :pending, %RecurringJob{name: name, mfa: mfa, schedule: schedule}})
+  def handle_call({:schedule_recurring, name, module, args, schedule}, _from, %Jobs{schedule_table: schedule_table} = state) do
+    :ets.insert(schedule_table, {name, nil, :pending, %RecurringJob{name: name, module: module, args: args, schedule: schedule}})
 
     {:reply, :ok, state}
   end
@@ -105,8 +105,8 @@ defmodule Commanded.Scheduler.Jobs do
     :ets.select(schedule_table, predicate)
   end
 
-  defp execute_job(%OneOffJob{name: name, mfa: mfa}, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table}) do
-    with {:ok, pid} <- JobSupervisor.start_job(name, mfa) do
+  defp execute_job(%OneOffJob{name: name, module: module, args: args}, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table}) do
+    with {:ok, pid} <- JobSupervisor.start_job(name, module, args) do
       ref = Process.monitor(pid)
 
       :ets.update_element(schedule_table, name, {3, :running})
@@ -114,8 +114,8 @@ defmodule Commanded.Scheduler.Jobs do
     end
   end
 
-  defp execute_job(%RecurringJob{name: name, mfa: mfa}, %Jobs{}) do
-    {:ok, _pid} = JobSupervisor.start_job(name, mfa)
+  defp execute_job(%RecurringJob{name: name, module: module, args: args}, %Jobs{}) do
+    {:ok, _pid} = JobSupervisor.start_job(name, module, args)
   end
 
   defp remove_completed_job(ref, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table} = state) do
