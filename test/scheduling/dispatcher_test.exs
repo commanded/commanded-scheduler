@@ -3,7 +3,8 @@ defmodule Commanded.DispatcherTest do
 
   import Commanded.Assertions.EventAssertions
 
-  alias Commanded.Scheduler.Dispatcher
+  alias Commanded.Scheduler
+  alias Commanded.Scheduler.{Dispatcher,Jobs}
   alias ExampleDomain.TicketBooking.Commands.TimeoutReservation
   alias ExampleDomain.TicketRouter
   alias ExampleDomain.TicketBooking.Commands.ReserveTicket
@@ -26,6 +27,20 @@ defmodule Commanded.DispatcherTest do
       }
 
       assert :ok = Dispatcher.execute("timeout", timeout)
+
+      assert_receive_event ReservationExpired, fn event ->
+        assert event.ticket_uuid == context.ticket_uuid
+      end
+    end
+
+    test "should execute dispatch as scheduled job", context do
+      timeout = %TimeoutReservation{
+        ticket_uuid: context.ticket_uuid,
+      }
+      now = NaiveDateTime.utc_now()
+
+      assert :ok = Scheduler.schedule_once(context.ticket_uuid, Dispatcher, timeout, now)
+      assert :ok = Jobs.run_jobs(now)
 
       assert_receive_event ReservationExpired, fn event ->
         assert event.ticket_uuid == context.ticket_uuid

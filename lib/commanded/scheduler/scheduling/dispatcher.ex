@@ -1,7 +1,13 @@
 defmodule Commanded.Scheduler.Dispatcher do
   @moduledoc false
 
-  def execute(name, command) do
+  require Logger
+
+  @behaviour Commanded.Scheduler.Job
+
+  def execute(_name, command) do
+    Logger.debug(fn -> "Attempting to dispatch scheduled command: #{inspect command}" end)
+
     router().dispatch(command)
   end
 
