@@ -1,5 +1,9 @@
-defmodule Commanded.Scheduler.JobScheduler do
+defmodule Commanded.Scheduler.Projection do
   @moduledoc false
+
+  use Commanded.Projections.Ecto,
+    name: "Commanded.Scheduler.Projection",
+    repo: Commanded.Scheduler.Repo
 
   defmodule Schedule do
     use Ecto.Schema
@@ -15,13 +19,12 @@ defmodule Commanded.Scheduler.JobScheduler do
     end
   end
 
-  use Commanded.Projections.Ecto,
-    name: "Commanded.Scheduler",
-    repo: Commanded.Scheduler.Repo
-
-  alias Commanded.Scheduler
-  alias Commanded.Scheduler.{Dispatcher,ScheduledOnce,ScheduledRecurring,ScheduleElapsed}
-  alias Commanded.Scheduler.JobScheduler.Schedule
+  alias Commanded.Scheduler.{
+    ScheduledOnce,
+    ScheduledRecurring,
+    ScheduleElapsed,
+  }
+  alias Commanded.Scheduler.Projection.Schedule
 
   project %ScheduledOnce{} = once do
     Ecto.Multi.insert(multi, :schedule_once, %Schedule{
@@ -45,14 +48,8 @@ defmodule Commanded.Scheduler.JobScheduler do
     Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid))
   end
 
-  def after_update(%ScheduledOnce{} = once, _metadata, _changes) do
-    Scheduler.schedule_once(once.schedule_uuid, Dispatcher, [], once.due_at)
-  end
-
-  def after_update(_event, _metadata, _changes), do: :ok
-
   defp schedule_query(schedule_uuid) do
-    from s in Schedule
+    from s in Schedule,
     where: s.schedule_uuid == ^schedule_uuid
   end
 end

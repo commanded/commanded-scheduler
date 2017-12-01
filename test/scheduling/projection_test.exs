@@ -1,11 +1,11 @@
-defmodule Commanded.JobSchedulerTest do
+defmodule Commanded.Scheduling.ProjectionTest do
   use Commanded.Scheduler.RuntimeCase
 
   import Commanded.Scheduler.Factory
 
   alias Commanded.Helpers.Wait
-  alias Commanded.Scheduler.JobScheduler.Schedule
-  alias Commanded.Scheduler.{Dispatcher,Jobs,OneOffJob,Repo}
+  alias Commanded.Scheduler.Projection.Schedule
+  alias Commanded.Scheduler.Repo
 
   describe "schedule once" do
     setup [:schedule_once]
@@ -19,19 +19,6 @@ defmodule Commanded.JobSchedulerTest do
       }
       assert schedule.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
       assert schedule.due_at == context.due_at
-    end
-
-    test "should schedule job", context do
-      Wait.until(fn ->
-        assert Jobs.scheduled_jobs() == [
-          %OneOffJob{
-            name: context.schedule_uuid,
-            module: Dispatcher,
-            args: context.command,
-            run_at: context.due_at,
-          }
-        ]
-      end)
     end
   end
 

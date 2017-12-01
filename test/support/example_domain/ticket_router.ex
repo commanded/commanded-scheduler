@@ -1,4 +1,6 @@
 defmodule ExampleDomain.TicketRouter do
+  @moduledoc false
+  
   use Commanded.Commands.Router
 
   alias ExampleDomain.TicketBooking

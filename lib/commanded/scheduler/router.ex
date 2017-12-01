@@ -1,5 +1,6 @@
 defmodule Commanded.Scheduler.Router do
   @moduledoc false
+  
   use Commanded.Commands.Router
 
   alias Commanded.Scheduler.{

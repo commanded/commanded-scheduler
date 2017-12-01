@@ -70,6 +70,13 @@ defmodule Commanded.Scheduler.Schedule do
     }
   end
 
+  def apply(
+    %Schedule{} = schedule,
+    %ScheduleElapsed{})
+  do
+    schedule
+  end
+
   # private helpers
 
   defp include_command_type(map, command) do

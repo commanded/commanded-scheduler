@@ -1,6 +1,6 @@
 %{"certifi": {:hex, :certifi, "2.0.0", "a0c0e475107135f76b8c1d5bc7efb33cd3815cb3cf3dea7aefdd174dabead064", [:rebar3], [], "hexpm"},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [:mix], [], "hexpm"},
-  "commanded": {:hex, :commanded, "0.15.1", "e324ce6e109e716ff03da23a682791f67a0f8d73da64e79d4b03d77eff9faa0c", [:mix], [{:poison, "~> 3.1", [hex: :poison, repo: "hexpm", optional: false]}, {:uuid, "~> 1.1", [hex: :uuid, repo: "hexpm", optional: false]}], "hexpm"},
+  "commanded": {:git, "https://github.com/commanded/commanded.git", "182f930c71d5353ba769eacbcddc99e8c318c26f", []},
   "commanded_ecto_projections": {:hex, :commanded_ecto_projections, "0.6.0", "004b7ed525ab8a04a71bf3dfb3baf070cdfaae6ab945b3d002ceae0fb978dd4d", [:mix], [{:commanded, ">= 0.12.0", [hex: :commanded, repo: "hexpm", optional: false]}, {:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: false]}], "hexpm"},
   "connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], [], "hexpm"},
   "crontab": {:hex, :crontab, "1.1.2", "4784a50987b4a19af07a908f98e8a308b00f9c93efc5a7892155dc10cd8fc7d9", [:mix], [{:ecto, "~> 1.0 or ~> 2.0 or ~> 2.1", [hex: :ecto, repo: "hexpm", optional: true]}], "hexpm"},
