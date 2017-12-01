@@ -8,6 +8,7 @@ defmodule Commanded.Scheduler.ScheduleOnce do
     command: struct(),
     due_at: NaiveDateTime.t,
   }
+  
   defstruct [
     :schedule_uuid,
     :command,

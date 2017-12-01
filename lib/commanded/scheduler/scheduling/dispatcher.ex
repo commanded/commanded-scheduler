@@ -3,16 +3,17 @@ defmodule Commanded.Scheduler.Dispatcher do
 
   require Logger
 
+  alias Commanded.Scheduler.{Router,TriggerSchedule}
+
   @behaviour Commanded.Scheduler.Job
 
-  def execute(_name, command) do
-    Logger.debug(fn -> "Attempting to dispatch scheduled command: #{inspect command}" end)
+  def execute(schedule_uuid, _args) do
+    Logger.debug(fn -> "Attempting to trigger schedule #{inspect schedule_uuid}" end)
 
-    router().dispatch(command)
-  end
+    trigger_schedule = %TriggerSchedule{
+      schedule_uuid: schedule_uuid
+    }
 
-  defp router do
-    Application.get_env(:commanded_scheduler, :router) ||
-      raise "Commanded scheduler expects a `:router` to be defined in environment config"
+    Router.dispatch(trigger_schedule)
   end
 end
