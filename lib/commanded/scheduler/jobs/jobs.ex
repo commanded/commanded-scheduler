@@ -90,7 +90,6 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   def handle_info(:run_jobs, state) do
-    IO.puts "run jobs"
     execute_pending_jobs(utc_now(), state)
 
     schedule_jobs()

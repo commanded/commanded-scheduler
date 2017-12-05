@@ -1,6 +1,6 @@
 defmodule Commanded.Scheduler.Factory do
   @moduledoc false
-  
+
   alias Commanded.Scheduler.ExampleCommand
   alias Commanded.Scheduler.{ScheduleOnce,ScheduleRecurring,TriggerSchedule}
   alias Commanded.Scheduler.Router
@@ -78,7 +78,9 @@ defmodule Commanded.Scheduler.Factory do
 
     [
       ticket_uuid: ticket_uuid,
+      schedule_uuid: "schedule-" <> ticket_uuid,
       expires_at: expires_at,
+      due_at: expires_at,
     ]
   end
 end
