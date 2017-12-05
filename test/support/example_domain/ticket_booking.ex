@@ -1,4 +1,6 @@
 defmodule ExampleDomain.TicketBooking do
+  @moduledoc false
+  
   defmodule Commands do
     defmodule ReserveTicket, do: defstruct [:ticket_uuid, :description, :price, :expires_at]
     defmodule TimeoutReservation, do: defstruct [:ticket_uuid]

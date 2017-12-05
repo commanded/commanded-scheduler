@@ -18,7 +18,7 @@ defmodule Commanded.Scheduling.DispatcherTest do
       assert_receive_event ScheduleElapsed, fn event ->
         assert event.schedule_uuid == context.schedule_uuid
         assert event.command == context.command
-        assert event.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
+        assert event.command_type == "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
       end
     end
 

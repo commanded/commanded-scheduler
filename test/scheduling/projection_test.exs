@@ -14,11 +14,23 @@ defmodule Commanded.Scheduling.ProjectionTest do
       {:ok, schedule} = get_schedule(context.schedule_uuid)
 
       assert schedule.command == %{
-        "aggregate_uuid" => context.aggregate_uuid,
-        "data" => "example",
+        "ticket_uuid" => context.ticket_uuid,
       }
-      assert schedule.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
+      assert schedule.command_type == "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
       assert schedule.due_at == context.due_at
+    end
+  end
+
+  describe "schedule once triggered" do
+    setup [:reserve_ticket, :schedule_once, :trigger_schedule]
+
+    test "should delete persisted job schedule", context do
+      Wait.until(fn ->
+        case Repo.get(Schedule, context.schedule_uuid) do
+          nil -> :ok
+          _schedule -> flunk("Schedule #{inspect context.schedule_uuid} exists")
+        end
+      end)
     end
   end
 

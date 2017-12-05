@@ -1,4 +1,6 @@
 defmodule Commanded.Scheduler.RuntimeCase do
+  @moduledoc false
+  
   use ExUnit.CaseTemplate
 
   alias Commanded.Scheduler.Repo

@@ -1,11 +1,16 @@
 defmodule ExampleDomain.TimeoutReservationHandler do
+  @moduledoc false
+
   use Commanded.Event.Handler, name: __MODULE__
 
   alias Commanded.Scheduler.ScheduleOnce
-  alias ExampleDomain.TicketCompositeRouter
+  alias ExampleDomain.AppRouter
   alias ExampleDomain.TicketBooking.Commands.TimeoutReservation
   alias ExampleDomain.TicketBooking.Events.TicketReserved
 
+  @doc """
+  Timeout the ticket reservation after the expiry date/time.
+  """
   def handle(
     %TicketReserved{ticket_uuid: ticket_uuid, expires_at: expires_at},
     _metadata)
@@ -20,6 +25,6 @@ defmodule ExampleDomain.TimeoutReservationHandler do
       due_at: expires_at,
     }
 
-    TicketCompositeRouter.dispatch(schedule_once)
+    AppRouter.dispatch(schedule_once)
   end
 end

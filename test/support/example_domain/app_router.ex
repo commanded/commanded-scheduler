@@ -1,6 +1,6 @@
-defmodule ExampleDomain.TicketCompositeRouter do
+defmodule ExampleDomain.AppRouter do
   @moduledoc false
-  
+
   use Commanded.Commands.CompositeRouter
 
   router ExampleDomain.TicketRouter
