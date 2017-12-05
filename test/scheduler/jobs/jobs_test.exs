@@ -22,19 +22,35 @@ defmodule Commanded.JobsTest do
   end
 
   describe "schedule once" do
-    test "should schedule job" do
-      run_at = utc_now()
-      Jobs.schedule_once("once", Job, [self()], run_at)
+    setup [:schedule_once]
 
+    test "should schedule job", context do
       assert Jobs.scheduled_jobs() == [
         %OneOffJob{
           name: "once",
           module: Job,
           args: [self()],
-          run_at: run_at,
+          run_at: context.run_at,
         }
       ]
       assert Jobs.running_jobs() == []
+    end
+
+    test "should execute job after run at time elapses" do
+      # wait to allow jobs to execute via internal timer
+      :timer.sleep 1_000
+
+      assert_receive {:execute, "once"}
+
+      assert Jobs.scheduled_jobs() == []
+      assert Jobs.running_jobs() == []
+    end
+
+    defp schedule_once(_context) do
+      run_at = utc_now()
+      Jobs.schedule_once("once", Job, [self()], run_at)
+
+      [run_at: run_at]
     end
   end
 
