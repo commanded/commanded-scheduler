@@ -22,16 +22,22 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   @doc """
-  Get all scheduled jobs
+  Get all scheduled jobs.
   """
   def scheduled_jobs do
     GenServer.call(__MODULE__, :scheduled_jobs)
   end
 
+  @doc """
+  Get pending jobs due at the given date/time (in UTC).
+  """
   def pending_jobs(now) do
     GenServer.call(__MODULE__, {:pending_jobs, now})
   end
 
+  @doc """
+  Get all currently running jobs.
+  """
   def running_jobs do
     GenServer.call(__MODULE__, :running_jobs)
   end
@@ -45,6 +51,8 @@ defmodule Commanded.Scheduler.Jobs do
       schedule_table: :ets.new(:schedule_table, [:set, :private]),
       jobs_table: :ets.new(:jobs_table, [:set, :private]),
     }
+
+    schedule_jobs()
 
     {:ok, state}
   end
@@ -67,24 +75,37 @@ defmodule Commanded.Scheduler.Jobs do
     {:reply, reply, state}
   end
 
-  def handle_call({:pending_jobs, now}, _from, %Jobs{} = state) do
+  def handle_call({:pending_jobs, now}, _from, state) do
     {:reply, pending_jobs(now, state), state}
   end
 
-  def handle_call(:running_jobs, _from, %Jobs{} = state) do
+  def handle_call(:running_jobs, _from, state) do
     {:reply, running_jobs(state), state}
   end
 
-  def handle_call({:run_jobs, now}, _from, %Jobs{} = state) do
-    for job <- pending_jobs(now, state) do
-      execute_job(job, state)
-    end
+  def handle_call({:run_jobs, now}, _from, state) do
+    execute_pending_jobs(now, state)
 
     {:reply, :ok, state}
   end
 
-  def handle_info({:DOWN, ref, :process, _object, _reason}, %Jobs{} = state) do
+  def handle_info(:run_jobs, state) do
+    IO.puts "run jobs"
+    execute_pending_jobs(utc_now(), state)
+
+    schedule_jobs()
+
+    {:noreply, state}
+  end
+
+  def handle_info({:DOWN, ref, :process, _object, _reason}, state) do
     {:noreply, remove_completed_job(ref, state)}
+  end
+
+  defp execute_pending_jobs(now, state) do
+    for job <- pending_jobs(now, state) do
+      execute_job(job, state)
+    end
   end
 
   defp pending_jobs(now, %Jobs{schedule_table: schedule_table}) do
@@ -130,5 +151,14 @@ defmodule Commanded.Scheduler.Jobs do
     end
   end
 
-  defp epoch_seconds(due_at), do: NaiveDateTime.diff(due_at, ~N[1970-01-01 00:00:00])
+  defp schedule_jobs,
+    do: Process.send_after(self(), :run_jobs, schedule_interval())
+
+  defp schedule_interval,
+    do: Application.get_env(:commanded_scheduler, :schedule_interval, 60_000)
+
+  defp epoch_seconds(due_at),
+    do: NaiveDateTime.diff(due_at, ~N[1970-01-01 00:00:00])
+
+  defp utc_now, do: NaiveDateTime.utc_now()
 end

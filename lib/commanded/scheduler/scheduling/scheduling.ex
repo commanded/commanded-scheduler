@@ -1,7 +1,10 @@
 defmodule Commanded.Scheduler.Scheduling do
   @moduledoc false
+  
   use Commanded.Event.Handler,
     name: "Commanded.Scheduler.Scheduling"
+
+  require Logger
 
   alias Commanded.Scheduler
   alias Commanded.Scheduler.{
@@ -18,6 +21,8 @@ defmodule Commanded.Scheduler.Scheduling do
   end
 
   def handle(%ScheduleElapsed{command: command}, _metadata) do
+    Logger.debug(fn -> "Attempting to dispatch scheduled command: #{inspect command}" end)
+
     router().dispatch(command)
   end
 
