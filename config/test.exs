@@ -6,7 +6,7 @@ config :ex_unit,
   capture_log: true
 
 config :commanded_scheduler,
-  prefix: "scheduler-"
+  router: ExampleDomain.AppRouter
 
 config :commanded_scheduler, Commanded.Scheduler.Repo,
   adapter: Ecto.Adapters.Postgres,

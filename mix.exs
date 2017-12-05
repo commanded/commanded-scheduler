@@ -35,7 +35,7 @@ defmodule Commanded.Scheduler.Mixfile do
 
   defp deps do
     [
-      {:commanded, ">= 0.15.0", runtime: false},
+      {:commanded, github: "commanded/commanded", runtime: false, override: true},
       {:commanded_ecto_projections, "~> 0.6"},
       {:crontab, "~> 1.1"},
       {:ecto, "~> 2.2"},

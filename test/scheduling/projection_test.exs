@@ -1,11 +1,11 @@
-defmodule Commanded.JobSchedulerTest do
+defmodule Commanded.Scheduling.ProjectionTest do
   use Commanded.Scheduler.RuntimeCase
 
   import Commanded.Scheduler.Factory
 
   alias Commanded.Helpers.Wait
-  alias Commanded.Scheduler.JobScheduler.Schedule
-  alias Commanded.Scheduler.{Dispatcher,Jobs,OneOffJob,Repo}
+  alias Commanded.Scheduler.Projection.Schedule
+  alias Commanded.Scheduler.Repo
 
   describe "schedule once" do
     setup [:schedule_once]
@@ -14,23 +14,22 @@ defmodule Commanded.JobSchedulerTest do
       {:ok, schedule} = get_schedule(context.schedule_uuid)
 
       assert schedule.command == %{
-        "aggregate_uuid" => context.aggregate_uuid,
-        "data" => "example",
+        "ticket_uuid" => context.ticket_uuid,
       }
-      assert schedule.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
+      assert schedule.command_type == "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
       assert schedule.due_at == context.due_at
     end
+  end
 
-    test "should schedule job", context do
+  describe "schedule once triggered" do
+    setup [:reserve_ticket, :schedule_once, :trigger_schedule]
+
+    test "should delete persisted job schedule", context do
       Wait.until(fn ->
-        assert Jobs.scheduled_jobs() == [
-          %OneOffJob{
-            name: context.schedule_uuid,
-            module: Dispatcher,
-            args: context.command,
-            run_at: context.due_at,
-          }
-        ]
+        case Repo.get(Schedule, context.schedule_uuid) do
+          nil -> :ok
+          _schedule -> flunk("Schedule #{inspect context.schedule_uuid} exists")
+        end
       end)
     end
   end

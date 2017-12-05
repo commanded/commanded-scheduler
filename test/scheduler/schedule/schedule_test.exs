@@ -19,7 +19,7 @@ defmodule Commanded.ScheduleTest do
       assert_receive_event ScheduledOnce, fn scheduled ->
         assert scheduled.schedule_uuid == context.schedule_uuid
         assert scheduled.command == context.command
-        assert scheduled.command_type == "Elixir.Commanded.Scheduler.ExampleCommand"
+        assert scheduled.command_type == "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
         assert scheduled.due_at == context.due_at
       end
     end

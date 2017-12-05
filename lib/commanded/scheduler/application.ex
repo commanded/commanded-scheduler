@@ -5,11 +5,12 @@ defmodule Commanded.Scheduler.Application do
 
   def start(_type, _args) do
     children = [
-      Commanded.Scheduler.Repo,
       {Task.Supervisor, [name: Commanded.Scheduler.JobRunner]},
+      Commanded.Scheduler.Repo,
       Commanded.Scheduler.JobSupervisor,
       Commanded.Scheduler.Jobs,
-      Commanded.Scheduler.JobScheduler,
+      Commanded.Scheduler.Projection,
+      Commanded.Scheduler.Scheduling,
     ]
 
     opts = [strategy: :one_for_one, name: Commanded.Scheduler.Supervisor]
