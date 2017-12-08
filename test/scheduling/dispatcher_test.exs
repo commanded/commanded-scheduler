@@ -4,6 +4,7 @@ defmodule Commanded.Scheduling.DispatcherTest do
   import Commanded.Assertions.EventAssertions
   import Commanded.Scheduler.Factory
 
+  alias Commanded.Helpers.Wait
   alias Commanded.Scheduler
   alias Commanded.Scheduler.{Dispatcher,Jobs,ScheduleElapsed,TriggerSchedule}
 
@@ -23,10 +24,10 @@ defmodule Commanded.Scheduling.DispatcherTest do
     end
 
     test "should execute dispatch as scheduled job", context do
-      trigger_schedule = %TriggerSchedule{schedule_uuid: context.schedule_uuid}
       now = NaiveDateTime.utc_now()
 
-      assert :ok = Scheduler.schedule_once(context.schedule_uuid, Dispatcher, trigger_schedule, now)
+      Wait.until(fn -> assert Jobs.scheduled_jobs() != [] end)
+
       assert :ok = Jobs.run_jobs(now)
 
       assert_receive_event ScheduleElapsed, fn event ->

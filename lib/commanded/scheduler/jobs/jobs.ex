@@ -52,21 +52,21 @@ defmodule Commanded.Scheduler.Jobs do
       jobs_table: :ets.new(:jobs_table, [:set, :private]),
     }
 
-    schedule_jobs()
+    schedule_job_run()
 
     {:ok, state}
   end
 
-  def handle_call({:schedule_once, name, module, args, run_at}, _from, %Jobs{schedule_table: schedule_table} = state) do
-    :ets.insert(schedule_table, {name, epoch_seconds(run_at), :pending, %OneOffJob{name: name, module: module, args: args, run_at: run_at}})
+  def handle_call({:schedule_once, name, module, args, run_at}, _from, state) do
+    reply = schedule_job(name, %OneOffJob{name: name, module: module, args: args, run_at: run_at}, epoch_seconds(run_at), state)
 
-    {:reply, :ok, state}
+    {:reply, reply, state}
   end
 
-  def handle_call({:schedule_recurring, name, module, args, schedule}, _from, %Jobs{schedule_table: schedule_table} = state) do
-    :ets.insert(schedule_table, {name, nil, :pending, %RecurringJob{name: name, module: module, args: args, schedule: schedule}})
+  def handle_call({:schedule_recurring, name, module, args, schedule}, _from, state) do
+    reply = schedule_job(name, %RecurringJob{name: name, module: module, args: args, schedule: schedule}, nil, state)
 
-    {:reply, :ok, state}
+    {:reply, reply, state}
   end
 
   def handle_call(:scheduled_jobs, _from, %Jobs{schedule_table: schedule_table} = state) do
@@ -91,8 +91,7 @@ defmodule Commanded.Scheduler.Jobs do
 
   def handle_info(:run_jobs, state) do
     execute_pending_jobs(utc_now(), state)
-
-    schedule_jobs()
+    schedule_job_run()
 
     {:noreply, state}
   end
@@ -101,9 +100,20 @@ defmodule Commanded.Scheduler.Jobs do
     {:noreply, remove_completed_job(ref, state)}
   end
 
-  defp execute_pending_jobs(now, state) do
-    for job <- pending_jobs(now, state) do
-      execute_job(job, state)
+  defp schedule_job(name, job, run_at, %Jobs{schedule_table: schedule_table} = state) do
+    case job_exists?(name, state) do
+      false ->
+        :ets.insert(schedule_table, {name, run_at, :pending, job})
+        :ok
+
+      true -> {:error, :already_scheduled}
+    end
+  end
+
+  defp job_exists?(name, %Jobs{schedule_table: schedule_table}) do
+    case :ets.lookup(schedule_table, name) do
+      [_job] -> true
+      [] -> false
     end
   end
 
@@ -123,6 +133,12 @@ defmodule Commanded.Scheduler.Jobs do
     end
 
     :ets.select(schedule_table, predicate)
+  end
+
+  defp execute_pending_jobs(now, state) do
+    for job <- pending_jobs(now, state) do
+      execute_job(job, state)
+    end
   end
 
   defp execute_job(%OneOffJob{name: name, module: module, args: args}, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table}) do
@@ -150,7 +166,7 @@ defmodule Commanded.Scheduler.Jobs do
     end
   end
 
-  defp schedule_jobs,
+  defp schedule_job_run,
     do: Process.send_after(self(), :run_jobs, schedule_interval())
 
   defp schedule_interval,

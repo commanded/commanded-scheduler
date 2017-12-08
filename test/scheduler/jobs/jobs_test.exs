@@ -36,6 +36,11 @@ defmodule Commanded.JobsTest do
       assert Jobs.running_jobs() == []
     end
 
+    test "should reject already scheduled job" do
+      assert {:error, :already_scheduled} = Jobs.schedule_once("once", Job, [self()], utc_now())
+      assert Jobs.scheduled_jobs() |> length() == 1
+    end
+
     test "should execute job after run at time elapses" do
       # wait to allow jobs to execute via internal timer
       :timer.sleep 1_000
@@ -55,9 +60,9 @@ defmodule Commanded.JobsTest do
   end
 
   describe "schedule recurring" do
-    test "should schedule job" do
-      Jobs.schedule_recurring("recurring", Job, [self()], "@daily")
+    setup [:schedule_recurring]
 
+    test "should schedule job" do
       assert Jobs.scheduled_jobs() == [
         %RecurringJob{
           name: "recurring",
@@ -67,6 +72,15 @@ defmodule Commanded.JobsTest do
         }
       ]
       assert Jobs.running_jobs() == []
+    end
+
+    test "should reject already scheduled job" do
+      assert {:error, :already_scheduled} = Jobs.schedule_recurring("recurring", Job, [self()], "@daily")
+      assert Jobs.scheduled_jobs() |> length() == 1
+    end
+
+    defp schedule_recurring(_context) do
+      Jobs.schedule_recurring("recurring", Job, [self()], "@daily")
     end
   end
 

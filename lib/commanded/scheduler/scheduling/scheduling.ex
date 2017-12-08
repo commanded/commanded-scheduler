@@ -28,13 +28,16 @@ defmodule Commanded.Scheduler.Scheduling do
   end
 
   def handle(%ScheduledOnce{schedule_uuid: schedule_uuid, due_at: due_at}, _metadata) do
-    schedule_once(schedule_uuid, due_at)
+    case schedule_once(schedule_uuid, due_at) do
+      :ok -> :ok
+      {:error, :already_scheduled} -> :ok
+    end
   end
 
-  def handle(%ScheduleElapsed{command: command}, _metadata) do
+  def handle(%ScheduleElapsed{command: command}, %{correlation_id: correlation_id, event_id: event_id}) do
     Logger.debug(fn -> "Attempting to dispatch scheduled command: #{inspect command}" end)
 
-    router().dispatch(command)
+    router().dispatch(command, causation_id: event_id, correlation_id: correlation_id)
   end
 
   defp schedule_once(schedule_uuid, due_at) do

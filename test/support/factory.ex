@@ -24,6 +24,7 @@ defmodule Commanded.Scheduler.Factory do
 
     [
       schedule_uuid: schedule_uuid,
+      schedule_once: schedule_once,
       ticket_uuid: ticket_uuid,
       due_at: due_at,
       command: command,
@@ -49,6 +50,7 @@ defmodule Commanded.Scheduler.Factory do
 
     [
       schedule_uuid: schedule_uuid,
+      schedule_recurring: schedule_recurring,
       aggregate_uuid: aggregate_uuid,
       command: command,
       schedule: schedule,

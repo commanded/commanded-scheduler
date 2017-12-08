@@ -1,15 +1,16 @@
 defmodule Commanded.Scheduler.RuntimeCase do
   @moduledoc false
-  
+
   use ExUnit.CaseTemplate
 
   alias Commanded.Scheduler.Repo
 
   setup do
     Application.stop(:commanded_scheduler)
+    Application.stop(:commanded)
 
     {:ok, event_store} = Commanded.EventStore.Adapters.InMemory.start_link()
-    clear_database()
+    reset_database()
 
     Application.ensure_all_started(:commanded)
     Application.ensure_all_started(:commanded_scheduler)
@@ -36,7 +37,7 @@ defmodule Commanded.Scheduler.RuntimeCase do
     RESTART IDENTITY;
   """
 
-  defp clear_database() do
+  defp reset_database do
     database_config = Application.get_env(:commanded_scheduler, Repo)
 
     Application.ensure_all_started(:postgrex)
