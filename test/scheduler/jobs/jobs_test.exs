@@ -1,6 +1,7 @@
 defmodule Commanded.JobsTest do
   use Commanded.Scheduler.RuntimeCase
 
+  alias Commanded.Helpers.Wait
   alias Commanded.Scheduler.{Jobs,OneOffJob,RecurringJob}
 
   defmodule Job do
@@ -24,13 +25,13 @@ defmodule Commanded.JobsTest do
   describe "schedule once" do
     setup [:schedule_once]
 
-    test "should schedule job", context do
+    test "should schedule job", %{run_at: run_at} do
       assert Jobs.scheduled_jobs() == [
         %OneOffJob{
           name: "once",
           module: Job,
           args: [self()],
-          run_at: context.run_at,
+          run_at: run_at,
         }
       ]
       assert Jobs.running_jobs() == []
@@ -41,14 +42,16 @@ defmodule Commanded.JobsTest do
       assert Jobs.scheduled_jobs() |> length() == 1
     end
 
-    test "should execute job after run at time elapses" do
-      # wait to allow jobs to execute via internal timer
-      :timer.sleep 1_000
+    test "should execute job after run at time elapses", %{run_at: run_at} do
+      # execute pending jobs at the given "now" date/time
+      Jobs.run_jobs(run_at)
 
       assert_receive {:execute, "once"}
 
-      assert Jobs.scheduled_jobs() == []
-      assert Jobs.running_jobs() == []
+      Wait.until(fn ->
+        assert Jobs.scheduled_jobs() == []
+        assert Jobs.running_jobs() == []
+      end)
     end
 
     defp schedule_once(_context) do

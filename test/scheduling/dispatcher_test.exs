@@ -5,7 +5,6 @@ defmodule Commanded.Scheduling.DispatcherTest do
   import Commanded.Scheduler.Factory
 
   alias Commanded.Helpers.Wait
-  alias Commanded.Scheduler
   alias Commanded.Scheduler.{Dispatcher,Jobs,ScheduleElapsed,TriggerSchedule}
 
   describe "dispatcher" do

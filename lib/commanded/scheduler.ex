@@ -4,28 +4,48 @@ defmodule Commanded.Scheduler do
   [Commanded](https://hex.pm/packages/commanded) CQRS/ES applications.
   """
 
-  alias Commanded.Scheduler.Jobs
+  alias Commanded.Scheduler.{
+    Router,
+    ScheduleOnce,
+    ScheduleRecurring
+  }
 
   @doc """
-  Schedule a named one-off job using the given module, function, args to run at
-  the specified date/time.
+  Schedule a named one-off job using the given command to dispatch at the
+  specified date/time.
   """
-  @spec schedule_once(name :: any, module :: atom, args :: any, run_at :: NaiveDateTime.t) :: :ok
-  def schedule_once(name, module, args, %NaiveDateTime{} = run_at)
-    when is_atom(module)
-  do
-    Jobs.schedule_once(name, module, args, run_at)
+  @spec schedule_once(String.t(), struct, NaiveDateTime.t()) :: :ok
+  def schedule_once(name, command, %NaiveDateTime{} = due_at)
+      when is_bitstring(name) do
+    schedule_once = %ScheduleOnce{
+      schedule_uuid: name,
+      command: command,
+      due_at: due_at
+    }
+
+    Router.dispatch(schedule_once)
   end
 
   @doc """
-  Schedule a named recurring job using the given module, function, args to run
-  repeatedly on the given schedule.
+  Schedule a named recurring job using the given command to dispatch repeatedly
+  on the given schedule.
+
+  Schedule supports the cron format where the minute, hour, day of month, month,
+  and day of week (0 - 6, Sunday to Saturday) are specified. An example crontab
+  schedule is "45 23 * * 6". It would trigger at 23:45 (11:45 PM) every Saturday.
+
+  For more details please refer to https://en.wikipedia.org/wiki/Cron
   """
-  @spec schedule_recurring(name :: any, module :: atom, args :: any, schedle :: String.t) :: :ok
-  def schedule_recurring(name, module, args, schedule)
-    when is_atom(module)
-    when is_bitstring(schedule)
-  do
-    Jobs.schedule_recurring(name, module, args, schedule)
+  @spec schedule_recurring(String.t(), struct, String.t()) :: :ok
+  def schedule_recurring(name, command, schedule)
+      when is_bitstring(name)
+      when is_bitstring(schedule) do
+    schedule_recurring = %ScheduleRecurring{
+      schedule_uuid: name,
+      command: command,
+      schedule: schedule
+    }
+
+    Router.dispatch(schedule_recurring)
   end
 end
