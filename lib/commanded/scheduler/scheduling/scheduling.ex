@@ -11,8 +11,8 @@ defmodule Commanded.Scheduler.Scheduling do
     Dispatcher,
     Jobs,
     Repo,
-    ScheduleElapsed,
     ScheduledOnce,
+    ScheduleTriggered,
     TriggerSchedule
   }
 
@@ -23,7 +23,13 @@ defmodule Commanded.Scheduler.Scheduling do
   """
   def init do
     for schedule <- Repo.all(Schedule) do
-      schedule_once(schedule.schedule_uuid, schedule.due_at)
+      %Schedule{
+        schedule_uuid: schedule_uuid,
+        name: name,
+        due_at: due_at,
+      } = schedule
+
+      schedule_once(schedule_uuid, name, due_at)
     end
 
     :ok
@@ -34,24 +40,25 @@ defmodule Commanded.Scheduler.Scheduling do
   """
   def handle(%ScheduledOnce{} = event, _metadata) do
     %ScheduledOnce{
-      command: command,
       schedule_uuid: schedule_uuid,
+      name: name,
+      command: command,
       due_at: due_at
     } = event
 
-    Logger.debug(fn -> "Scheduling command: #{inspect(command)} once at: #{inspect(due_at)}" end)
+    Logger.debug(fn -> "Scheduling command #{inspect(command)} once at: #{inspect(due_at)}" end)
 
-    case schedule_once(schedule_uuid, due_at) do
+    case schedule_once(schedule_uuid, name, due_at) do
       :ok -> :ok
       {:error, :already_scheduled} -> :ok
     end
   end
 
   @doc """
-  A schedule's due at date/time has elapsed, so trigger its command using the
-  configured router.
+  Execute the command using the configured router when triggered at its
+  scheduled date/time.
   """
-  def handle(%ScheduleElapsed{command: command} = event, metadata) do
+  def handle(%ScheduleTriggered{command: command} = event, metadata) do
     %{
       correlation_id: correlation_id,
       event_id: event_id
@@ -62,10 +69,10 @@ defmodule Commanded.Scheduler.Scheduling do
     router().dispatch(command, causation_id: event_id, correlation_id: correlation_id)
   end
 
-  defp schedule_once(schedule_uuid, due_at) do
-    trigger_schedule = %TriggerSchedule{schedule_uuid: schedule_uuid}
+  defp schedule_once(schedule_uuid, name, due_at) do
+    trigger_schedule = %TriggerSchedule{schedule_uuid: schedule_uuid, name: name}
 
-    Jobs.schedule_once(schedule_uuid, Dispatcher, trigger_schedule, due_at)
+    Jobs.schedule_once({schedule_uuid, name}, Dispatcher, trigger_schedule, due_at)
   end
 
   defp router do

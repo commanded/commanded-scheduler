@@ -5,16 +5,16 @@ defmodule Commanded.Scheduling.SchedulingTest do
   import Commanded.Scheduler.Factory
 
   alias Commanded.Helpers.Wait
-  alias Commanded.Scheduler.{Dispatcher,Jobs,OneOffJob,Repo,TriggerSchedule}
+  alias Commanded.Scheduler.{Dispatcher, Jobs, OneOffJob, Repo, TriggerSchedule}
   alias Commanded.Scheduler.Projection.Schedule
   alias ExampleDomain.TicketBooking.Events.ReservationExpired
 
   setup do
     {:ok, handler} = ExampleDomain.TimeoutReservationHandler.start_link()
 
-    on_exit fn ->
+    on_exit(fn ->
       Commanded.Helpers.ProcessHelper.shutdown(handler)
-    end
+    end)
   end
 
   describe "schedule once" do
@@ -31,9 +31,9 @@ defmodule Commanded.Scheduling.SchedulingTest do
     test "should dispatch scheduled command", context do
       assert :ok = Jobs.run_jobs(context.expires_at)
 
-      assert_receive_event ReservationExpired, fn event ->
+      assert_receive_event(ReservationExpired, fn event ->
         assert event.ticket_uuid == context.ticket_uuid
-      end
+      end)
     end
   end
 
@@ -47,7 +47,7 @@ defmodule Commanded.Scheduling.SchedulingTest do
   end
 
   defp wait_until_job_scheduled(_context) do
-    Wait.until(fn -> assert Jobs.scheduled_jobs != [] end)
+    Wait.until(fn -> assert Jobs.scheduled_jobs() != [] end)
     :ok
   end
 
@@ -62,17 +62,26 @@ defmodule Commanded.Scheduling.SchedulingTest do
   end
 
   defp assert_job_scheduled(context) do
-    trigger_schedule = %TriggerSchedule{schedule_uuid: context.schedule_uuid}
+    %{
+      schedule_uuid: schedule_uuid,
+      schedule_name: schedule_name
+    } = context
+
+    trigger_schedule = %TriggerSchedule{
+      schedule_uuid: schedule_uuid,
+      name: schedule_name
+    }
 
     Wait.until(fn ->
-      assert Jobs.scheduled_jobs() == [
+      assert Jobs.scheduled_jobs() ==       [
         %OneOffJob{
-          name: context.schedule_uuid,
+          name: {schedule_uuid, schedule_name},
           module: Dispatcher,
           args: trigger_schedule,
-          run_at: context.due_at,
+          run_at: context.due_at
         }
       ]
+
     end)
   end
 end
