@@ -5,8 +5,6 @@ defmodule Commanded.Scheduler.Scheduling do
 
   require Logger
 
-  alias Commanded.Scheduler
-
   alias Commanded.Scheduler.{
     Dispatcher,
     Jobs,
@@ -58,7 +56,7 @@ defmodule Commanded.Scheduler.Scheduling do
   Execute the command using the configured router when triggered at its
   scheduled date/time.
   """
-  def handle(%ScheduleTriggered{command: command} = event, metadata) do
+  def handle(%ScheduleTriggered{command: command}, metadata) do
     %{
       correlation_id: correlation_id,
       event_id: event_id
