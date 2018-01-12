@@ -71,4 +71,29 @@ defmodule Commanded.SchedulerTest do
       end)
     end
   end
+
+  describe "schedule batch" do
+    test "should schedule all jobs" do
+      aggregate_uuid = UUID.uuid4()
+      command1 = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once1"}
+      command2 = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once2"}
+      run_at = NaiveDateTime.utc_now()
+
+      Scheduler.batch("batch", fn batch ->
+        batch
+        |> Scheduler.schedule_once(command1, run_at)
+        |> Scheduler.schedule_once(command2, run_at)
+      end)
+
+      Scheduler.Jobs.run_jobs(run_at)
+
+      assert_receive_event(Executed, fn executed -> executed.data == "once1" end, fn executed ->
+        assert executed.data == "once1"
+      end)
+
+      assert_receive_event(Executed, fn executed -> executed.data == "once2" end, fn executed ->
+        assert executed.data == "once2"
+      end)
+    end
+  end
 end

@@ -1,4 +1,6 @@
 defmodule Commanded.Scheduler.Job do
+  @moduledoc false
+  
   use GenServer
 
   require Logger

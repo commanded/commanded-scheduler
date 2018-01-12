@@ -13,6 +13,7 @@ defmodule Commanded.Scheduling.ProjectionTest do
     test "should persist scheduled job", context do
       {:ok, schedule} = get_schedule(context.schedule_uuid)
 
+      assert schedule.name == "timeout_reservation"
       assert schedule.command == %{
         "ticket_uuid" => context.ticket_uuid,
       }

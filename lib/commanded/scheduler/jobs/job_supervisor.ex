@@ -1,4 +1,6 @@
 defmodule Commanded.Scheduler.JobSupervisor do
+  @moduledoc false
+  
   use Supervisor
 
   alias Commanded.Scheduler.Job

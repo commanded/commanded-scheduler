@@ -4,14 +4,15 @@ defmodule Commanded.Scheduler.ScheduleOnce do
   """
 
   @type t :: %__MODULE__{
-    schedule_uuid: String.t,
-    command: struct(),
-    due_at: NaiveDateTime.t,
-  }
-  
+          schedule_uuid: String.t(),
+          name: String.t(),
+          command: struct(),
+          due_at: NaiveDateTime.t()
+        }
   defstruct [
     :schedule_uuid,
+    :name,
     :command,
-    :due_at,
+    :due_at
   ]
 end

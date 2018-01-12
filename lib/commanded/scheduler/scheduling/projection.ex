@@ -10,6 +10,7 @@ defmodule Commanded.Scheduler.Projection do
 
     @primary_key {:schedule_uuid, :string, []}
     schema "schedules" do
+      field :name, :string
       field :command, :map
       field :command_type, :string
       field :due_at, :naive_datetime
@@ -22,34 +23,52 @@ defmodule Commanded.Scheduler.Projection do
   alias Commanded.Scheduler.{
     ScheduledOnce,
     ScheduledRecurring,
-    ScheduleElapsed,
+    ScheduleTriggered,
   }
   alias Commanded.Scheduler.Projection.Schedule
 
   project %ScheduledOnce{} = once do
+    %ScheduledOnce{
+      schedule_uuid: schedule_uuid,
+      name: name,
+      command: command,
+      command_type: command_type,
+      due_at: due_at
+    } = once
+
     Ecto.Multi.insert(multi, :schedule_once, %Schedule{
-      schedule_uuid: once.schedule_uuid,
-      command: Map.from_struct(once.command),
-      command_type: once.command_type,
-      due_at: once.due_at,
+      schedule_uuid: schedule_uuid,
+      name: name,
+      command: Map.from_struct(command),
+      command_type: command_type,
+      due_at: due_at,
     })
   end
 
   project %ScheduledRecurring{} = recurring do
+    %ScheduledRecurring{
+      schedule_uuid: schedule_uuid,
+      name: name,
+      command: command,
+      command_type: command_type,
+      schedule: schedule
+    } = recurring
+
     Ecto.Multi.insert(multi, :schedule_once, %Schedule{
-      schedule_uuid: recurring.schedule_uuid,
-      command: Map.from_struct(recurring.command),
-      command_type: recurring.command_type,
-      schedule: recurring.schedule,
+      schedule_uuid: schedule_uuid,
+      name: name,
+      command: Map.from_struct(command),
+      command_type: command_type,
+      schedule: schedule,
     })
   end
 
-  project %ScheduleElapsed{schedule_uuid: schedule_uuid} do
-    Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid))
+  project %ScheduleTriggered{schedule_uuid: schedule_uuid, name: name} do
+    Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid, name))
   end
 
-  defp schedule_query(schedule_uuid) do
+  defp schedule_query(schedule_uuid, name) do
     from s in Schedule,
-    where: s.schedule_uuid == ^schedule_uuid
+    where: s.schedule_uuid == ^schedule_uuid and s.name == ^name
   end
 end

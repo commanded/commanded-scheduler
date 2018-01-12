@@ -1,9 +1,10 @@
 defmodule Commanded.Scheduler.Router do
   @moduledoc false
-  
+
   use Commanded.Commands.Router
 
   alias Commanded.Scheduler.{
+    ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,
     TriggerSchedule,
@@ -13,6 +14,7 @@ defmodule Commanded.Scheduler.Router do
   identify Schedule, by: :schedule_uuid
 
   dispatch [
+    ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,
     TriggerSchedule,
