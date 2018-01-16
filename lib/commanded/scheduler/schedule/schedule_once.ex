@@ -7,7 +7,7 @@ defmodule Commanded.Scheduler.ScheduleOnce do
           schedule_uuid: String.t(),
           name: String.t(),
           command: struct(),
-          due_at: NaiveDateTime.t()
+          due_at: DateTime.t() | NaiveDateTime.t()
         }
   defstruct [
     :schedule_uuid,

@@ -106,6 +106,26 @@ defmodule Commanded.JobsTest do
       ]
       assert Jobs.running_jobs() == []
     end
+
+    test "should support due at as `DateTime`" do
+      now = DateTime.utc_now()
+      now_unix = DateTime.to_unix(now)
+      past = DateTime.from_unix!(now_unix - 60)
+      future = DateTime.from_unix!(now_unix + 60)
+
+      Jobs.schedule_once("once-due", Job, [self()], past)
+      Jobs.schedule_once("once-not-due", Job, [self()], future)
+
+      assert Jobs.pending_jobs(now) == [
+        %OneOffJob{
+          name: "once-due",
+          module: Job,
+          args: [self()],
+          run_at: past,
+        }
+      ]
+      assert Jobs.running_jobs() == []
+    end
   end
 
   describe "run jobs" do

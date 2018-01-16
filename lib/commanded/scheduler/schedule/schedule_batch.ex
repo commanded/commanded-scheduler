@@ -7,7 +7,7 @@ defmodule Commanded.Scheduler.ScheduleBatch do
     @type t :: %__MODULE__{
             name: String.t(),
             command: struct(),
-            due_at: NaiveDateTime.t()
+            due_at: DateTime.t() | NaiveDateTime.t()
           }
     defstruct [
       :name,

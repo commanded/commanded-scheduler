@@ -13,6 +13,7 @@ defmodule Commanded.Scheduler do
   }
 
   @type schedule :: String.t() | ScheduleBatch.t()
+  @type due_at :: DateTime.t() | NaiveDateTime.t()
 
   @doc """
   Schedule a uniquely identified one-off job using the given command to dispatch
@@ -27,12 +28,11 @@ defmodule Commanded.Scheduler do
       Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 
   """
-  @spec schedule_once(schedule, struct, NaiveDateTime.t(), name: String.t()) ::
-          :ok | {:error, term}
+  @spec schedule_once(schedule, struct, due_at, name: String.t()) :: :ok | {:error, term}
 
   def schedule_once(schedule, command, due_at, opts \\ [])
 
-  def schedule_once(schedule_uuid, command, %NaiveDateTime{} = due_at, opts)
+  def schedule_once(schedule_uuid, command, due_at, opts)
       when is_bitstring(schedule_uuid) do
     schedule_once = %ScheduleOnce{
       schedule_uuid: schedule_uuid,
@@ -44,7 +44,7 @@ defmodule Commanded.Scheduler do
     Router.dispatch(schedule_once)
   end
 
-  def schedule_once(%ScheduleBatch{} = batch, command, %NaiveDateTime{} = due_at, opts) do
+  def schedule_once(%ScheduleBatch{} = batch, command, due_at, opts) do
     %ScheduleBatch{schedule_once: schedule_once} = batch
 
     once = %ScheduleBatch.Once{

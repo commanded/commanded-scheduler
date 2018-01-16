@@ -17,8 +17,9 @@ defmodule Commanded.Scheduler.Jobs do
   Schedule a named one-off job using the given module, function, args to run at
   the specified date/time.
   """
-  @spec schedule_once(any, atom, [any], NaiveDateTime.t) :: :ok
-  def schedule_once(name, module, args, %NaiveDateTime{} = run_at)
+  @spec schedule_once(any, atom, [any], NaiveDateTime.t() | DateTime.t()) :: :ok
+
+  def schedule_once(name, module, args, run_at)
     when is_atom(module)
   do
     GenServer.call(__MODULE__, {:schedule_once, name, module, args, run_at})
@@ -120,7 +121,8 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   def handle_info(:run_jobs, state) do
-    execute_pending_jobs(utc_now(), state)
+    utc_now() |> execute_pending_jobs(state)
+
     schedule_job_run()
 
     {:noreply, state}
@@ -212,7 +214,10 @@ defmodule Commanded.Scheduler.Jobs do
   defp schedule_interval,
     do: Application.get_env(:commanded_scheduler, :schedule_interval, 60_000)
 
-  defp epoch_seconds(due_at),
+  defp epoch_seconds(%DateTime{} = due_at),
+    do: DateTime.diff(due_at, DateTime.from_unix!(0))
+
+  defp epoch_seconds(%NaiveDateTime{} = due_at),
     do: NaiveDateTime.diff(due_at, ~N[1970-01-01 00:00:00])
 
   defp utc_now, do: NaiveDateTime.utc_now()
