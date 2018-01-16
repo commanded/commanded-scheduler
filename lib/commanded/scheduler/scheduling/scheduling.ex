@@ -9,6 +9,7 @@ defmodule Commanded.Scheduler.Scheduling do
     Dispatcher,
     Jobs,
     Repo,
+    ScheduleCancelled,
     ScheduledOnce,
     ScheduleTriggered,
     TriggerSchedule
@@ -24,7 +25,7 @@ defmodule Commanded.Scheduler.Scheduling do
       %Schedule{
         schedule_uuid: schedule_uuid,
         name: name,
-        due_at: due_at,
+        due_at: due_at
       } = schedule
 
       schedule_once(schedule_uuid, name, due_at)
@@ -46,10 +47,7 @@ defmodule Commanded.Scheduler.Scheduling do
 
     Logger.debug(fn -> "Scheduling command #{inspect(command)} once at: #{inspect(due_at)}" end)
 
-    case schedule_once(schedule_uuid, name, due_at) do
-      :ok -> :ok
-      {:error, :already_scheduled} -> :ok
-    end
+    schedule_once(schedule_uuid, name, due_at)
   end
 
   @doc """
@@ -67,10 +65,40 @@ defmodule Commanded.Scheduler.Scheduling do
     router().dispatch(command, causation_id: event_id, correlation_id: correlation_id)
   end
 
+  @doc """
+  Execute the command using the configured router when triggered at its
+  scheduled date/time.
+  """
+  def handle(%ScheduleCancelled{schedule_uuid: schedule_uuid, name: name}, _metadata) do
+    Logger.debug(fn -> "Cancelling scheduled command: #{inspect(schedule_uuid)}" end)
+
+    case Jobs.cancel({schedule_uuid, name}) do
+      :ok ->
+        :ok
+
+      {:error, :not_scheduled} ->
+        Logger.warn(fn ->
+          "Failed to cancel scheduled command, not scheduled: #{inspect(schedule_uuid)}"
+        end)
+
+        :ok
+    end
+  end
+
   defp schedule_once(schedule_uuid, name, due_at) do
     trigger_schedule = %TriggerSchedule{schedule_uuid: schedule_uuid, name: name}
 
-    Jobs.schedule_once({schedule_uuid, name}, Dispatcher, trigger_schedule, due_at)
+    case Jobs.schedule_once({schedule_uuid, name}, Dispatcher, trigger_schedule, due_at) do
+      :ok ->
+        :ok
+
+      {:error, :already_scheduled} ->
+        Logger.warn(fn ->
+          "Failed to schedule command, already scheduled: #{inspect(schedule_uuid)}"
+        end)
+
+        :ok
+    end
   end
 
   defp router do

@@ -2,7 +2,9 @@ defmodule Commanded.Scheduler.Schedule do
   @moduledoc false
 
   alias Commanded.Scheduler.{
+    CancelSchedule,
     ScheduleBatch,
+    ScheduleCancelled,
     ScheduledOnce,
     ScheduledRecurring,
     ScheduleOnce,
@@ -88,6 +90,26 @@ defmodule Commanded.Scheduler.Schedule do
     end
   end
 
+  def execute(%Schedule{schedule_uuid: nil}, %CancelSchedule{}), do: {:error, :no_schedule}
+
+  # Cancel all scheduled commands
+  def execute(%Schedule{scheduled: scheduled} = schedule, %CancelSchedule{name: nil}) do
+    scheduled
+    |> Map.keys()
+    |> case do
+      [] ->
+        {:error, :no_schedule}
+
+      names ->
+        Enum.reduce(names, Multi.new(schedule), fn name, multi ->
+          Multi.execute(multi, &cancel(&1, name))
+        end)
+    end
+  end
+
+  # Cancel named scheduled command
+  def execute(%Schedule{} = schedule, %CancelSchedule{name: name}), do: cancel(schedule, name)
+
   # state mutators
 
   def apply(%Schedule{scheduled: scheduled} = schedule, %ScheduledOnce{} = once) do
@@ -124,6 +146,10 @@ defmodule Commanded.Scheduler.Schedule do
     %Schedule{schedule | scheduled: Map.delete(scheduled, name)}
   end
 
+  def apply(%Schedule{scheduled: scheduled} = schedule, %ScheduleCancelled{name: name}) do
+    %Schedule{schedule | scheduled: Map.delete(scheduled, name)}
+  end
+
   # private helpers
 
   defp schedule_once(%Schedule{} = schedule, once) when is_map(once) do
@@ -148,5 +174,20 @@ defmodule Commanded.Scheduler.Schedule do
 
   defp include_command_type(%{command: command} = schedule) when is_map(schedule) do
     Map.put(schedule, :command_type, Atom.to_string(command.__struct__))
+  end
+
+  defp cancel(%Schedule{} = schedule, name) do
+    %Schedule{schedule_uuid: schedule_uuid, scheduled: scheduled} = schedule
+
+    case Map.get(scheduled, name) do
+      nil ->
+        {:error, :no_schedule}
+
+      _ ->
+        %ScheduleCancelled{
+          schedule_uuid: schedule_uuid,
+          name: name
+        }
+    end
   end
 end

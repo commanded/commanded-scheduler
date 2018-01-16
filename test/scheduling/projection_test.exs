@@ -22,15 +22,22 @@ defmodule Commanded.Scheduling.ProjectionTest do
     end
   end
 
-  describe "schedule once triggered" do
+  describe "schedule once, cancelled" do
+    setup [:schedule_once, :cancel_schedule]
+
+    test "should delete persisted job schedule", %{schedule_uuid: schedule_uuid} do
+      Wait.until(fn ->
+        assert Repo.get(Schedule, schedule_uuid) == nil
+      end)
+    end
+  end
+
+  describe "schedule once, triggered" do
     setup [:reserve_ticket, :schedule_once, :trigger_schedule]
 
-    test "should delete persisted job schedule", context do
+    test "should delete persisted job schedule", %{schedule_uuid: schedule_uuid} do
       Wait.until(fn ->
-        case Repo.get(Schedule, context.schedule_uuid) do
-          nil -> :ok
-          _schedule -> flunk("Schedule #{inspect context.schedule_uuid} exists")
-        end
+        assert Repo.get(Schedule, schedule_uuid) == nil
       end)
     end
   end

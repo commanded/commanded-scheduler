@@ -2,7 +2,7 @@ defmodule Commanded.Scheduler.Factory do
   @moduledoc false
 
   alias Commanded.Scheduler.ExampleCommand
-  alias Commanded.Scheduler.{ScheduleOnce, ScheduleRecurring, TriggerSchedule}
+  alias Commanded.Scheduler.{CancelSchedule, ScheduleOnce, ScheduleRecurring, TriggerSchedule}
   alias Commanded.Scheduler.Router
   alias ExampleDomain.TicketBooking.Commands.{ReserveTicket, TimeoutReservation}
   alias ExampleDomain.TicketRouter
@@ -72,6 +72,17 @@ defmodule Commanded.Scheduler.Factory do
     trigger_schedule = %TriggerSchedule{schedule_uuid: schedule_uuid, name: name}
 
     :ok = Router.dispatch(trigger_schedule)
+
+    []
+  end
+
+  def cancel_schedule(context) do
+    cancel_schedule = %CancelSchedule{
+      schedule_uuid: context.schedule_uuid,
+      name: context.schedule_name
+    }
+
+    :ok = Router.dispatch(cancel_schedule)
 
     []
   end

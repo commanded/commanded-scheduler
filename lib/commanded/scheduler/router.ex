@@ -4,6 +4,7 @@ defmodule Commanded.Scheduler.Router do
   use Commanded.Commands.Router
 
   alias Commanded.Scheduler.{
+    CancelSchedule,
     ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,
@@ -14,6 +15,7 @@ defmodule Commanded.Scheduler.Router do
   identify Schedule, by: :schedule_uuid
 
   dispatch [
+    CancelSchedule,
     ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,

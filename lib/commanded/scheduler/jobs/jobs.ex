@@ -37,6 +37,15 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   @doc """
+  Schedule a named recurring job using the given module, function, args to run
+  repeatedly on the given schedule.
+  """
+  @spec cancel(any) :: :ok | {:error, reason :: any}
+  def cancel(name) do
+    GenServer.call(__MODULE__, {:cancel, name})
+  end
+
+  @doc """
   Get all scheduled jobs.
   """
   def scheduled_jobs do
@@ -84,6 +93,12 @@ defmodule Commanded.Scheduler.Jobs do
     {:reply, reply, state}
   end
 
+  def handle_call({:cancel, name}, _from, state) do
+    reply = remove_job(name, state)
+
+    {:reply, reply, state}
+  end
+
   def handle_call(:scheduled_jobs, _from, %Jobs{schedule_table: schedule_table} = state) do
     reply = schedule_table |> :ets.tab2list() |> Enum.map(fn {_name, _due_at, _status, job} -> job end)
 
@@ -122,6 +137,16 @@ defmodule Commanded.Scheduler.Jobs do
         :ok
 
       true -> {:error, :already_scheduled}
+    end
+  end
+
+  defp remove_job(name, %Jobs{schedule_table: schedule_table} = state) do
+    case job_exists?(name, state) do
+      true ->
+        :ets.delete(schedule_table, name)
+        :ok
+
+      false -> {:error, :not_scheduled}
     end
   end
 

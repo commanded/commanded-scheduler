@@ -3,30 +3,12 @@ defmodule Commanded.SchedulerTest do
 
   import Commanded.Assertions.EventAssertions
 
+  alias Commanded.Helpers.Wait
   alias Commanded.Scheduler
-  alias Commanded.Scheduler.ExampleCommand
+  alias Commanded.Scheduler.Jobs
   alias Timex.Duration
-
-  defmodule Executed do
-    defstruct [:data]
-  end
-
-  defmodule ExampleAggregate do
-    defstruct [:executed_at]
-
-    def execute(%ExampleAggregate{}, %ExampleCommand{data: data}) do
-      %Executed{data: data}
-    end
-
-    def apply(%ExampleAggregate{} = agg, _event), do: agg
-  end
-
-  defmodule ExampleRouter do
-    use Commanded.Commands.Router
-
-    identify(ExampleAggregate, by: :aggregate_uuid)
-    dispatch([ExampleCommand], to: ExampleAggregate)
-  end
+  alias ExampleDomain.ExampleRouter
+  alias ExampleDomain.ExampleAggregate.{Execute, Executed}
 
   setup do
     original_router = Application.get_env(:commanded_scheduler, :router)
@@ -41,7 +23,7 @@ defmodule Commanded.SchedulerTest do
   describe "schedule once" do
     test "should schedule job" do
       aggregate_uuid = UUID.uuid4()
-      command = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once"}
+      command = %Execute{aggregate_uuid: aggregate_uuid, data: "once"}
       run_at = NaiveDateTime.utc_now()
 
       Scheduler.schedule_once("once", command, run_at)
@@ -58,7 +40,7 @@ defmodule Commanded.SchedulerTest do
     @tag :pending
     test "should schedule job" do
       aggregate_uuid = UUID.uuid4()
-      command = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once"}
+      command = %Execute{aggregate_uuid: aggregate_uuid, data: "once"}
 
       Scheduler.schedule_recurring("recurring", command, "@daily")
 
@@ -75,8 +57,8 @@ defmodule Commanded.SchedulerTest do
   describe "schedule batch" do
     test "should schedule all jobs" do
       aggregate_uuid = UUID.uuid4()
-      command1 = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once1"}
-      command2 = %ExampleCommand{aggregate_uuid: aggregate_uuid, data: "once2"}
+      command1 = %Execute{aggregate_uuid: aggregate_uuid, data: "once1"}
+      command2 = %Execute{aggregate_uuid: aggregate_uuid, data: "once2"}
       run_at = NaiveDateTime.utc_now()
 
       Scheduler.batch("batch", fn batch ->
@@ -94,6 +76,47 @@ defmodule Commanded.SchedulerTest do
       assert_receive_event(Executed, fn executed -> executed.data == "once2" end, fn executed ->
         assert executed.data == "once2"
       end)
+    end
+  end
+
+  describe "cancel schedule" do
+    setup [:schedule_once, :cancel_schedule]
+
+    test "should remove scheduled job" do
+      Wait.until(fn -> assert Jobs.scheduled_jobs() == [] end)
+    end
+
+    test "should error when job already cancelled" do
+      assert {:error, :no_schedule} = Scheduler.cancel_schedule("once")
+    end
+
+    test "should error when job does not exist" do
+      assert {:error, :no_schedule} = Scheduler.cancel_schedule("doesnotexist")
+    end
+
+    test "should not execute job", %{aggregate_uuid: aggregate_uuid, run_at: run_at} do
+      Scheduler.Jobs.run_jobs(run_at)
+
+      assert Commanded.EventStore.stream_forward(aggregate_uuid) == {:error, :stream_not_found}
+    end
+
+    defp schedule_once(_context) do
+      aggregate_uuid = UUID.uuid4()
+      command = %Execute{aggregate_uuid: aggregate_uuid, data: "once"}
+      run_at = NaiveDateTime.utc_now()
+
+      Scheduler.schedule_once("once", command, run_at)
+
+      Wait.until(fn -> refute Jobs.scheduled_jobs() == [] end)
+
+      [
+        aggregate_uuid: aggregate_uuid,
+        run_at: run_at,
+      ]
+    end
+
+    defp cancel_schedule(_context) do
+      Scheduler.cancel_schedule("once")
     end
   end
 end

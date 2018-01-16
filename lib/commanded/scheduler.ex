@@ -5,6 +5,7 @@ defmodule Commanded.Scheduler do
   """
 
   alias Commanded.Scheduler.{
+    CancelSchedule,
     Router,
     ScheduleBatch,
     ScheduleOnce,
@@ -26,7 +27,8 @@ defmodule Commanded.Scheduler do
       Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 
   """
-  @spec schedule_once(schedule, struct, NaiveDateTime.t(), name: String.t()) :: :ok
+  @spec schedule_once(schedule, struct, NaiveDateTime.t(), name: String.t()) ::
+          :ok | {:error, term}
 
   def schedule_once(schedule, command, due_at, opts \\ [])
 
@@ -43,9 +45,7 @@ defmodule Commanded.Scheduler do
   end
 
   def schedule_once(%ScheduleBatch{} = batch, command, %NaiveDateTime{} = due_at, opts) do
-    %ScheduleBatch{
-      schedule_once: schedule_once
-    } = batch
+    %ScheduleBatch{schedule_once: schedule_once} = batch
 
     once = %ScheduleBatch.Once{
       name: name(batch, opts),
@@ -77,7 +77,7 @@ defmodule Commanded.Scheduler do
       Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "@daily", name: "timeout")
 
   """
-  @spec schedule_recurring(schedule, struct, String.t(), name: String.t()) :: :ok
+  @spec schedule_recurring(schedule, struct, String.t(), name: String.t()) :: :ok | {:error, term}
 
   def schedule_recurring(schedule, command, cron_expression, opts \\ [])
 
@@ -96,9 +96,7 @@ defmodule Commanded.Scheduler do
 
   def schedule_recurring(%ScheduleBatch{} = batch, command, cron_expression, opts)
       when is_bitstring(cron_expression) do
-    %ScheduleBatch{
-      schedule_recurring: schedule_recurring
-    } = batch
+    %ScheduleBatch{schedule_recurring: schedule_recurring} = batch
 
     recurring = %ScheduleBatch.Recurring{
       name: name(batch, opts),
@@ -123,12 +121,31 @@ defmodule Commanded.Scheduler do
       end)
 
   """
+  @spec batch(String.t(), (ScheduleBatch.t() -> ScheduleBatch.t())) :: :ok | {:error, term}
+
   def batch(schedule_uuid, batch_fn)
       when is_bitstring(schedule_uuid)
       when is_function(batch_fn) do
-    schedule_batch = batch_fn.(%ScheduleBatch{schedule_uuid: schedule_uuid})
+    %ScheduleBatch{} = schedule_batch = batch_fn.(%ScheduleBatch{schedule_uuid: schedule_uuid})
 
     Router.dispatch(schedule_batch)
+  end
+
+  @doc """
+  Cancel a one-off or recurring schedule.
+  """
+  @spec cancel_schedule(String.t(), name: String.t()) :: :ok | {:error, term}
+
+  def cancel_schedule(schedule_uuid, opts \\ [])
+
+  def cancel_schedule(schedule_uuid, opts)
+      when is_bitstring(schedule_uuid) do
+    cancel_schedule = %CancelSchedule{
+      schedule_uuid: schedule_uuid,
+      name: Keyword.get(opts, :name)
+    }
+
+    Router.dispatch(cancel_schedule)
   end
 
   defp name(opts), do: Keyword.get(opts, :name, "@default")
