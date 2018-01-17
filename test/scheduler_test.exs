@@ -119,4 +119,25 @@ defmodule Commanded.SchedulerTest do
       Scheduler.cancel_schedule("once")
     end
   end
+
+  describe "configure schedule prefix" do
+    setup do
+      Application.put_env(:commanded_scheduler, :schedule_prefix, "prefix-")
+
+      on_exit fn ->
+        Application.delete_env(:commanded_scheduler, :schedule_prefix)
+      end
+    end
+
+    test "should prefix stream" do
+      aggregate_uuid = UUID.uuid4()
+      command = %Execute{aggregate_uuid: aggregate_uuid, data: "once"}
+      run_at = NaiveDateTime.utc_now()
+
+      Scheduler.schedule_once("once", command, run_at)
+
+      assert Commanded.EventStore.stream_forward("once") == {:error, :stream_not_found}
+      refute Commanded.EventStore.stream_forward("prefix-once") |> Enum.to_list() == []
+    end
+  end
 end

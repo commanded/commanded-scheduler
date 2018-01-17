@@ -5,6 +5,7 @@ defmodule Commanded.Scheduler.Router do
 
   alias Commanded.Scheduler.{
     CancelSchedule,
+    Router,
     ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,
@@ -12,7 +13,9 @@ defmodule Commanded.Scheduler.Router do
   }
   alias Commanded.Scheduler.Schedule
 
-  identify Schedule, by: :schedule_uuid
+  identify Schedule,
+    by: :schedule_uuid,
+    prefix: &Router.schedule_prefix/0
 
   dispatch [
     CancelSchedule,
@@ -23,6 +26,6 @@ defmodule Commanded.Scheduler.Router do
   ], to: Schedule
 
   def schedule_prefix do
-    Application.get_env(:commanded_scheduler, :schedule_prefix)
+    Application.get_env(:commanded_scheduler, :schedule_prefix) || ""
   end
 end
