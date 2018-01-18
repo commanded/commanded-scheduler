@@ -3,11 +3,13 @@ defmodule Commanded.Scheduler.RuntimeCase do
 
   use ExUnit.CaseTemplate
 
-  alias Commanded.Scheduler.Repo
+  alias Commanded.EventStore.Adapters.InMemory
   alias Commanded.Helpers.ProcessHelper
+  alias Commanded.Scheduler.Repo
+  alias Commanded.Serialization.JsonSerializer
 
   setup do
-    {:ok, event_store} = Commanded.EventStore.Adapters.InMemory.start_link()
+    {:ok, event_store} = InMemory.start_link(serializer: JsonSerializer)
 
     reset_database()
 

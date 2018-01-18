@@ -17,27 +17,15 @@ defmodule Commanded.Scheduler.ScheduleTriggered do
   ]
 end
 
-alias Commanded.Scheduler.ScheduleTriggered
+alias Commanded.Scheduler.{Convert, ScheduleTriggered}
 
 defimpl Poison.Decoder, for: ScheduleTriggered do
-  def decode(%ScheduleTriggered{command: command, command_type: command_type} = elapsed, _options) do
+  def decode(%ScheduleTriggered{} = triggered, _options) do
+    %ScheduleTriggered{command: command, command_type: command_type} = triggered
+
     %ScheduleTriggered{
-      elapsed
-      | command: command_type |> String.to_existing_atom() |> to_struct(command)
+      triggered
+      | command: Convert.to_struct(command_type, command)
     }
-  end
-
-  # Convert deserialized map, containing string keys, into its target struct.
-  defp to_struct(type, map) do
-    struct = struct(type)
-
-    struct
-    |> Map.to_list()
-    |> Enum.reduce(struct, fn {k, _}, acc ->
-      case Map.fetch(map, Atom.to_string(k)) do
-        {:ok, v} -> %{acc | k => v}
-        :error -> acc
-      end
-    end)
   end
 end

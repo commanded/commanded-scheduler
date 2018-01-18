@@ -48,7 +48,7 @@ defmodule Commanded.Scheduler do
     %ScheduleBatch{schedule_once: schedule_once} = batch
 
     once = %ScheduleBatch.Once{
-      name: name(batch, opts),
+      name: name(opts),
       command: command,
       due_at: due_at
     }
@@ -82,8 +82,7 @@ defmodule Commanded.Scheduler do
   def schedule_recurring(schedule, command, cron_expression, opts \\ [])
 
   def schedule_recurring(schedule_uuid, command, cron_expression, opts)
-      when is_bitstring(schedule_uuid)
-      when is_bitstring(cron_expression) do
+      when is_bitstring(schedule_uuid) and is_bitstring(cron_expression) do
     schedule_recurring = %ScheduleRecurring{
       schedule_uuid: schedule_uuid,
       name: name(opts),
@@ -99,7 +98,7 @@ defmodule Commanded.Scheduler do
     %ScheduleBatch{schedule_recurring: schedule_recurring} = batch
 
     recurring = %ScheduleBatch.Recurring{
-      name: name(batch, opts),
+      name: name(opts),
       command: command,
       schedule: cron_expression
     }
@@ -124,8 +123,7 @@ defmodule Commanded.Scheduler do
   @spec batch(String.t(), (ScheduleBatch.t() -> ScheduleBatch.t())) :: :ok | {:error, term}
 
   def batch(schedule_uuid, batch_fn)
-      when is_bitstring(schedule_uuid)
-      when is_function(batch_fn) do
+      when is_bitstring(schedule_uuid) and is_function(batch_fn) do
     %ScheduleBatch{} = schedule_batch = batch_fn.(%ScheduleBatch{schedule_uuid: schedule_uuid})
 
     Router.dispatch(schedule_batch)
@@ -148,14 +146,5 @@ defmodule Commanded.Scheduler do
     Router.dispatch(cancel_schedule)
   end
 
-  defp name(opts), do: Keyword.get(opts, :name, "@default")
-
-  defp name(%ScheduleBatch{} = batch, opts) do
-    %ScheduleBatch{
-      schedule_once: schedule_once,
-      schedule_recurring: schedule_recurring
-    } = batch
-
-    Keyword.get(opts, :name, "@default#{length(schedule_once) + length(schedule_recurring)}")
-  end
+  defp name(opts), do: Keyword.get(opts, :name)
 end

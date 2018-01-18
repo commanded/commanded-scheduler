@@ -31,8 +31,7 @@ defmodule Commanded.Scheduler.Jobs do
   """
   @spec schedule_recurring(any, atom, [any], String.t) :: :ok
   def schedule_recurring(name, module, args, schedule)
-    when is_atom(module)
-    when is_bitstring(schedule)
+    when is_atom(module) and is_bitstring(schedule)
   do
     GenServer.call(__MODULE__, {:schedule_recurring, name, module, args, schedule})
   end

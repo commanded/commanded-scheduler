@@ -17,3 +17,16 @@ defmodule Commanded.Scheduler.ScheduledRecurring do
     :schedule
   ]
 end
+
+alias Commanded.Scheduler.{Convert, ScheduledRecurring}
+
+defimpl Poison.Decoder, for: ScheduledRecurring do
+  def decode(%ScheduledRecurring{} = recurring, _options) do
+    %ScheduledRecurring{command: command, command_type: command_type} = recurring
+
+    %ScheduledRecurring{
+      recurring
+      | command: Convert.to_struct(command_type, command)
+    }
+  end
+end

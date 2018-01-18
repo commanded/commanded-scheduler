@@ -4,7 +4,7 @@ defmodule Commanded.Scheduler.Repo.Migrations.AddScheduleTable do
   def change do
     create table(:schedules, primary_key: false) do
       add :schedule_uuid, :text, primary_key: true
-      add :name, :text
+      add :name, :text, primary_key: true
       add :command, :map
       add :command_type, :text
       add :due_at, :naive_datetime
@@ -12,7 +12,5 @@ defmodule Commanded.Scheduler.Repo.Migrations.AddScheduleTable do
 
       timestamps()
     end
-
-    create unique_index(:schedules, [:schedule_uuid, :name])
   end
 end

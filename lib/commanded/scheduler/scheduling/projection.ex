@@ -8,9 +8,10 @@ defmodule Commanded.Scheduler.Projection do
   defmodule Schedule do
     use Ecto.Schema
 
-    @primary_key {:schedule_uuid, :string, []}
+    @primary_key false
     schema "schedules" do
-      field :name, :string
+      field :schedule_uuid, :string, primary_key: true
+      field :name, :string, primary_key: true
       field :command, :map
       field :command_type, :string
       field :due_at, :naive_datetime

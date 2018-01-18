@@ -26,7 +26,7 @@ defmodule Commanded.Scheduler.Mixfile do
   defp aliases do
     [
       "event_store.reset":  ["event_store.drop", "event_store.create", "event_store.init"],
-      "ecto.setup":         ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.setup":         ["ecto.create", "ecto.migrate"],
       "ecto.reset":         ["ecto.drop", "ecto.setup"],
       "test":               ["test --no-start"],
       "test.watch":         ["test.watch --no-start"],

@@ -160,20 +160,49 @@ defmodule Commanded.Scheduler.Schedule do
     schedule(schedule, ScheduledRecurring, recurring)
   end
 
-  defp schedule(%Schedule{scheduled: scheduled}, schedule_type, %{name: name} = schedule) do
+  defp schedule(%Schedule{} = schedule, schedule_type, once_or_recurring) do
+    with {:ok, name} <- ensure_default_name(schedule, once_or_recurring),
+         :ok <- validate_scheduled(schedule, name) do
+      schedule_type
+      |> struct(once_or_recurring)
+      |> Map.put(:name, name)
+      |> Map.put(:command_type, command_type(once_or_recurring))
+    else
+      reply -> reply
+    end
+  end
+
+  # Ensure a valid schedule name is provided, or set a default if `nil`.
+  defp ensure_default_name(%Schedule{scheduled: scheduled}, schedule) do
+    case Map.get(schedule, :name) do
+      nil ->
+        # use a default name (e.g. `@default0`)
+        {:ok, "@default#{scheduled |> Map.keys() |> length()}"}
+
+      name when is_bitstring(name) ->
+        case String.length(name) do
+          0 -> {:error, :invalid_schedule}
+          _ -> {:ok, name}
+        end
+
+      _ ->
+        {:error, :invalid_schedule}
+    end
+  end
+
+  # Ensure the schedule name is unique
+  defp validate_scheduled(%Schedule{scheduled: scheduled}, name) do
     case Map.has_key?(scheduled, name) do
       true ->
         {:error, :already_scheduled}
 
       false ->
-        schedule_type
-        |> struct(schedule)
-        |> include_command_type()
+        :ok
     end
   end
 
-  defp include_command_type(%{command: command} = schedule) when is_map(schedule) do
-    Map.put(schedule, :command_type, Atom.to_string(command.__struct__))
+  defp command_type(%{command: command} = schedule) when is_map(schedule) do
+    Atom.to_string(command.__struct__)
   end
 
   defp cancel(%Schedule{} = schedule, name) do

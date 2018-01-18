@@ -88,7 +88,7 @@ defmodule Commanded.Scheduler.Factory do
   end
 
   def reserve_ticket(context) do
-    ticket_uuid = Map.get(context, :ticket_uuid, UUID.uuid4())
+    ticket_uuid = Map.get(context, :ticket_uuid) || UUID.uuid4()
     expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), 60, :second)
 
     reserve_ticket = %ReserveTicket{
@@ -103,7 +103,7 @@ defmodule Commanded.Scheduler.Factory do
     [
       ticket_uuid: ticket_uuid,
       schedule_uuid: "schedule-" <> ticket_uuid,
-      schedule_name: nil,
+      schedule_name: "@default0",
       expires_at: expires_at,
       due_at: expires_at
     ]

@@ -11,7 +11,7 @@ defmodule Commanded.Scheduling.ProjectionTest do
     setup [:schedule_once]
 
     test "should persist scheduled job", context do
-      {:ok, schedule} = get_schedule(context.schedule_uuid)
+      {:ok, schedule} = get_schedule(context)
 
       assert schedule.name == "timeout_reservation"
       assert schedule.command == %{
@@ -27,7 +27,7 @@ defmodule Commanded.Scheduling.ProjectionTest do
 
     test "should delete persisted job schedule", %{schedule_uuid: schedule_uuid} do
       Wait.until(fn ->
-        assert Repo.get(Schedule, schedule_uuid) == nil
+        assert Repo.get_by(Schedule, schedule_uuid: schedule_uuid) == nil
       end)
     end
   end
@@ -37,14 +37,14 @@ defmodule Commanded.Scheduling.ProjectionTest do
 
     test "should delete persisted job schedule", %{schedule_uuid: schedule_uuid} do
       Wait.until(fn ->
-        assert Repo.get(Schedule, schedule_uuid) == nil
+        assert Repo.get_by(Schedule, schedule_uuid: schedule_uuid) == nil
       end)
     end
   end
 
-  defp get_schedule(schedule_uuid) do
+  defp get_schedule(%{schedule_uuid: schedule_uuid, schedule_name: name}) do
     Wait.until(fn ->
-      case Repo.get(Schedule, schedule_uuid) do
+      case Repo.get_by(Schedule, schedule_uuid: schedule_uuid, name: name) do
         nil -> flunk("Schedule #{inspect schedule_uuid} does not exist")
         schedule -> {:ok, schedule}
       end
