@@ -174,3 +174,7 @@ defmodule TicketProcessManager do
   end
 end
 ```
+
+### Testing
+
+You can run all the scheduled jobs instantly with `:ok = Commanded.Scheduler.Jobs.run_jobs(run_at_date)`, where `run_at_date` would be the current date and time.
