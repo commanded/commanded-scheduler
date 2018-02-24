@@ -11,7 +11,7 @@ defmodule Commanded.Scheduler.Factory do
     schedule_uuid = UUID.uuid4()
     schedule_name = "timeout_reservation"
     ticket_uuid = Map.get(context, :ticket_uuid, UUID.uuid4())
-    due_at = NaiveDateTime.utc_now()
+    due_at = NaiveDateTime.utc_now() |> NaiveDateTime.add(60, :second)
 
     command = %TimeoutReservation{
       ticket_uuid: ticket_uuid
