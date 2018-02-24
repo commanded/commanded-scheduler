@@ -2,8 +2,8 @@ defmodule Commanded.Scheduler.Schedule do
   @moduledoc false
 
   alias Commanded.Scheduler.{
-    CancelSchedule,
     ScheduleBatch,
+    CancelSchedule,
     ScheduleCancelled,
     ScheduledOnce,
     ScheduledRecurring,

@@ -5,7 +5,7 @@ defmodule Commanded.SchedulerTest do
 
   alias Commanded.Helpers.Wait
   alias Commanded.Scheduler
-  alias Commanded.Scheduler.Jobs
+  alias Commanded.Scheduler.{Batch, Jobs}
   alias Timex.Duration
   alias ExampleDomain.ExampleRouter
   alias ExampleDomain.ExampleAggregate.{Execute, Executed}
@@ -61,11 +61,13 @@ defmodule Commanded.SchedulerTest do
       command2 = %Execute{aggregate_uuid: aggregate_uuid, data: "once2"}
       run_at = NaiveDateTime.utc_now()
 
-      Scheduler.batch("batch", fn batch ->
-        batch
-        |> Scheduler.schedule_once(command1, run_at)
-        |> Scheduler.schedule_once(command2, run_at)
-      end)
+      batch =
+        "batch"
+        |> Batch.new()
+        |> Batch.schedule_once(command1, run_at)
+        |> Batch.schedule_once(command2, run_at)
+
+      Scheduler.schedule_batch(batch)
 
       Scheduler.Jobs.run_jobs(run_at)
 
@@ -111,7 +113,7 @@ defmodule Commanded.SchedulerTest do
 
       [
         aggregate_uuid: aggregate_uuid,
-        run_at: run_at,
+        run_at: run_at
       ]
     end
 
@@ -124,9 +126,9 @@ defmodule Commanded.SchedulerTest do
     setup do
       Application.put_env(:commanded_scheduler, :schedule_prefix, "prefix-")
 
-      on_exit fn ->
+      on_exit(fn ->
         Application.delete_env(:commanded_scheduler, :schedule_prefix)
-      end
+      end)
     end
 
     test "should prefix stream" do

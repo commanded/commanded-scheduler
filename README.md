@@ -56,7 +56,12 @@ config :my_app,
     MyApp.Repo,
     Commanded.Scheduler.Repo
   ]
+
+config :my_app, Commanded.Scheduler.Repo,
+  migration_source: "scheduler_schema_migrations"
 ```
+
+You _must set_ the `migration_source` for the scheduler repo to a different table name from Ecto's default (`schema_migrations`) as shown above. This ensures that migrations for your own application's Ecto repo do not interfere with the Scheduler migrations when running `mix ecto.migrate`.
 
 Then using Ecto's mix tasks will include the Commanded scheduler repository at the same time as your own app's:
 
@@ -73,13 +78,13 @@ Schedule a uniquely identified one-off job using the given command to dispatch a
 #### Example
 
 ```elixir
-Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
 ```
 
 Name the scheduled job:
 
 ```elixir
-Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
+Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 ```
 
 ### Schedule a recurring command
@@ -95,13 +100,13 @@ For more details please refer to https://en.wikipedia.org/wiki/Cron.
 Schedule a job to run every 15 minutes:
 
 ```elixir
-Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "*/15 * * * *")
+Commanded.Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "*/15 * * * *")
 ```
 
 Name the recurring job that runs every day at midnight:
 
 ```elixir
-Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "@daily", name: "timeout")
+Commanded.Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "@daily", name: "timeout")
 ```
 
 ## Schedule multiple one-off or recurring commands in a single batch
@@ -111,11 +116,16 @@ This guarantees that all, or none, of the commands are scheduled.
 #### Example
 
 ```elixir
-Scheduler.batch(reservation_id, fn batch ->
-  batch
-  |> Scheduler.schedule_once(%TimeoutReservation{..}, timeout_due_at, name: "timeout")
-  |> Scheduler.schedule_once(%ReleaseSeat{..}, release_due_at, name: "release")
-end)
+alias Commanded.Scheduler
+alias Commanded.Scheduler.Batch
+
+batch =
+  reservation_id
+  |> Batch.new()
+  |> Batch.schedule_once(%TimeoutReservation{..}, timeout_due_at, name: "timeout")
+  |> Batch.schedule_once(%ReleaseSeat{..}, release_due_at, name: "release")
+
+Scheduler.schedule_batch(batch)  
 ```
 
 ## Dispatch scheduled command
