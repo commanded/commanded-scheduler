@@ -11,7 +11,7 @@ defmodule Commanded.Scheduler.Factory do
     schedule_uuid = UUID.uuid4()
     schedule_name = "timeout_reservation"
     ticket_uuid = Map.get(context, :ticket_uuid, UUID.uuid4())
-    due_at = NaiveDateTime.utc_now()
+    due_at = NaiveDateTime.utc_now() |> add_minutes(10)
 
     command = %TimeoutReservation{
       ticket_uuid: ticket_uuid
@@ -89,7 +89,7 @@ defmodule Commanded.Scheduler.Factory do
 
   def reserve_ticket(context) do
     ticket_uuid = Map.get(context, :ticket_uuid) || UUID.uuid4()
-    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), 60, :second)
+    expires_at = NaiveDateTime.utc_now() |> add_minutes(10)
 
     reserve_ticket = %ReserveTicket{
       ticket_uuid: ticket_uuid,
@@ -107,5 +107,9 @@ defmodule Commanded.Scheduler.Factory do
       expires_at: expires_at,
       due_at: expires_at
     ]
+  end
+
+  defp add_minutes(date, minutes) do
+    NaiveDateTime.add(date, 60 * minutes, :second)
   end
 end

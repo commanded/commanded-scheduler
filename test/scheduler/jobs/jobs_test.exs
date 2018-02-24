@@ -42,6 +42,15 @@ defmodule Commanded.JobsTest do
       assert Jobs.scheduled_jobs() |> length() == 1
     end
 
+    test "should not be pending job until due at", %{run_at: run_at} do
+      past = NaiveDateTime.add(run_at, -60, :second)
+      future = NaiveDateTime.add(run_at, 60, :second)
+
+      assert Jobs.pending_jobs(past) == []
+      assert Jobs.pending_jobs(run_at) != []
+      assert Jobs.pending_jobs(future) != []
+    end
+
     test "should execute job after run at time elapses", %{run_at: run_at} do
       # execute pending jobs at the given "now" date/time
       Jobs.run_jobs(run_at)

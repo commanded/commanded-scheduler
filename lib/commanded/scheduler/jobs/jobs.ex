@@ -5,7 +5,7 @@ defmodule Commanded.Scheduler.Jobs do
 
   import Ex2ms
 
-  alias Commanded.Scheduler.{Jobs,JobSupervisor,OneOffJob,RecurringJob}
+  alias Commanded.Scheduler.{Jobs, JobSupervisor, OneOffJob, RecurringJob}
 
   defstruct [:schedule_table, :jobs_table]
 
@@ -20,8 +20,7 @@ defmodule Commanded.Scheduler.Jobs do
   @spec schedule_once(any, atom, [any], NaiveDateTime.t() | DateTime.t()) :: :ok
 
   def schedule_once(name, module, args, run_at)
-    when is_atom(module)
-  do
+      when is_atom(module) do
     GenServer.call(__MODULE__, {:schedule_once, name, module, args, run_at})
   end
 
@@ -29,10 +28,9 @@ defmodule Commanded.Scheduler.Jobs do
   Schedule a named recurring job using the given module, function, args to run
   repeatedly on the given schedule.
   """
-  @spec schedule_recurring(any, atom, [any], String.t) :: :ok
+  @spec schedule_recurring(any, atom, [any], String.t()) :: :ok
   def schedule_recurring(name, module, args, schedule)
-    when is_atom(module) and is_bitstring(schedule)
-  do
+      when is_atom(module) and is_bitstring(schedule) do
     GenServer.call(__MODULE__, {:schedule_recurring, name, module, args, schedule})
   end
 
@@ -73,7 +71,7 @@ defmodule Commanded.Scheduler.Jobs do
   def init(_) do
     state = %Jobs{
       schedule_table: :ets.new(:schedule_table, [:set, :private]),
-      jobs_table: :ets.new(:jobs_table, [:set, :private]),
+      jobs_table: :ets.new(:jobs_table, [:set, :private])
     }
 
     schedule_job_run()
@@ -82,13 +80,25 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   def handle_call({:schedule_once, name, module, args, run_at}, _from, state) do
-    reply = schedule_job(name, %OneOffJob{name: name, module: module, args: args, run_at: run_at}, epoch_seconds(run_at), state)
+    reply =
+      schedule_job(
+        name,
+        %OneOffJob{name: name, module: module, args: args, run_at: run_at},
+        epoch_seconds(run_at),
+        state
+      )
 
     {:reply, reply, state}
   end
 
   def handle_call({:schedule_recurring, name, module, args, schedule}, _from, state) do
-    reply = schedule_job(name, %RecurringJob{name: name, module: module, args: args, schedule: schedule}, nil, state)
+    reply =
+      schedule_job(
+        name,
+        %RecurringJob{name: name, module: module, args: args, schedule: schedule},
+        nil,
+        state
+      )
 
     {:reply, reply, state}
   end
@@ -100,7 +110,10 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   def handle_call(:scheduled_jobs, _from, %Jobs{schedule_table: schedule_table} = state) do
-    reply = schedule_table |> :ets.tab2list() |> Enum.map(fn {_name, _due_at, _status, job} -> job end)
+    reply =
+      schedule_table
+      |> :ets.tab2list()
+      |> Enum.map(fn {_name, _due_at, _status, job} -> job end)
 
     {:reply, reply, state}
   end
@@ -137,7 +150,8 @@ defmodule Commanded.Scheduler.Jobs do
         :ets.insert(schedule_table, {name, run_at, :pending, job})
         :ok
 
-      true -> {:error, :already_scheduled}
+      true ->
+        {:error, :already_scheduled}
     end
   end
 
@@ -147,7 +161,8 @@ defmodule Commanded.Scheduler.Jobs do
         :ets.delete(schedule_table, name)
         :ok
 
-      false -> {:error, :not_scheduled}
+      false ->
+        {:error, :not_scheduled}
     end
   end
 
@@ -161,17 +176,19 @@ defmodule Commanded.Scheduler.Jobs do
   defp pending_jobs(now, %Jobs{schedule_table: schedule_table}) do
     due_at_epoch = epoch_seconds(now)
 
-    predicate = fun do
-      {_name, due_at, status, job} when due_at <= ^due_at_epoch and status == :pending -> job
-    end
+    predicate =
+      fun do
+        {_name, due_at, status, job} when due_at <= ^due_at_epoch and status == :pending -> job
+      end
 
     :ets.select(schedule_table, predicate)
   end
 
   defp running_jobs(%Jobs{schedule_table: schedule_table}) do
-    predicate = fun do
-      {_name, _due_at, status, job} when status == :running -> job
-    end
+    predicate =
+      fun do
+        {_name, _due_at, status, job} when status == :running -> job
+      end
 
     :ets.select(schedule_table, predicate)
   end
@@ -182,7 +199,10 @@ defmodule Commanded.Scheduler.Jobs do
     end
   end
 
-  defp execute_job(%OneOffJob{name: name, module: module, args: args}, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table}) do
+  defp execute_job(%OneOffJob{name: name, module: module, args: args}, %Jobs{
+         jobs_table: jobs_table,
+         schedule_table: schedule_table
+       }) do
     with {:ok, pid} <- JobSupervisor.start_job(name, module, args) do
       ref = Process.monitor(pid)
 
@@ -195,7 +215,10 @@ defmodule Commanded.Scheduler.Jobs do
     {:ok, _pid} = JobSupervisor.start_job(name, module, args)
   end
 
-  defp remove_completed_job(ref, %Jobs{jobs_table: jobs_table, schedule_table: schedule_table} = state) do
+  defp remove_completed_job(
+         ref,
+         %Jobs{jobs_table: jobs_table, schedule_table: schedule_table} = state
+       ) do
     case :ets.lookup(jobs_table, ref) do
       [{ref, name}] ->
         :ets.delete(jobs_table, ref)
@@ -207,17 +230,16 @@ defmodule Commanded.Scheduler.Jobs do
     end
   end
 
-  defp schedule_job_run,
-    do: Process.send_after(self(), :run_jobs, schedule_interval())
+  defp schedule_job_run, do: Process.send_after(self(), :run_jobs, schedule_interval())
 
   defp schedule_interval,
     do: Application.get_env(:commanded_scheduler, :schedule_interval, 60_000)
 
   defp epoch_seconds(%DateTime{} = due_at),
-    do: DateTime.diff(due_at, DateTime.from_unix!(0))
+    do: DateTime.diff(due_at, DateTime.from_unix!(0), :second)
 
   defp epoch_seconds(%NaiveDateTime{} = due_at),
-    do: NaiveDateTime.diff(due_at, ~N[1970-01-01 00:00:00])
+    do: NaiveDateTime.diff(due_at, ~N[1970-01-01 00:00:00], :second)
 
   defp utc_now, do: NaiveDateTime.utc_now()
 end

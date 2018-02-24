@@ -6,4 +6,4 @@ config :commanded_scheduler,
   max_retries: 3,
   job_timeout: :infinity
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

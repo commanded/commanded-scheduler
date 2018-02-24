@@ -22,6 +22,7 @@ defmodule Commanded.Scheduler.Projection do
   end
 
   alias Commanded.Scheduler.{
+    ScheduleCancelled,
     ScheduledOnce,
     ScheduledRecurring,
     ScheduleTriggered,
@@ -62,6 +63,10 @@ defmodule Commanded.Scheduler.Projection do
       command_type: command_type,
       schedule: schedule,
     })
+  end
+
+  project %ScheduleCancelled{schedule_uuid: schedule_uuid, name: name} do
+    Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid, name))
   end
 
   project %ScheduleTriggered{schedule_uuid: schedule_uuid, name: name} do

@@ -5,14 +5,14 @@ defmodule Commanded.Scheduler do
   """
 
   alias Commanded.Scheduler.{
+    ScheduleBatch,
     CancelSchedule,
     Router,
-    ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring
   }
 
-  @type schedule :: String.t() | ScheduleBatch.t()
+  @type schedule :: String.t()
   @type due_at :: DateTime.t() | NaiveDateTime.t()
 
   @doc """
@@ -42,18 +42,6 @@ defmodule Commanded.Scheduler do
     }
 
     Router.dispatch(schedule_once)
-  end
-
-  def schedule_once(%ScheduleBatch{} = batch, command, due_at, opts) do
-    %ScheduleBatch{schedule_once: schedule_once} = batch
-
-    once = %ScheduleBatch.Once{
-      name: name(opts),
-      command: command,
-      due_at: due_at
-    }
-
-    %ScheduleBatch{batch | schedule_once: [once | schedule_once]}
   end
 
   @doc """
@@ -93,19 +81,6 @@ defmodule Commanded.Scheduler do
     Router.dispatch(schedule_recurring)
   end
 
-  def schedule_recurring(%ScheduleBatch{} = batch, command, cron_expression, opts)
-      when is_bitstring(cron_expression) do
-    %ScheduleBatch{schedule_recurring: schedule_recurring} = batch
-
-    recurring = %ScheduleBatch.Recurring{
-      name: name(opts),
-      command: command,
-      schedule: cron_expression
-    }
-
-    %ScheduleBatch{batch | schedule_recurring: [recurring | schedule_recurring]}
-  end
-
   @doc """
   Schedule multiple one-off commands in a single batch.
 
@@ -113,20 +88,22 @@ defmodule Commanded.Scheduler do
 
   ## Example
 
-      Scheduler.batch(reservation_id, fn batch ->
-        batch
-        |> Scheduler.schedule_once(%TimeoutReservation{..}, timeout_due_at, name: "timeout")
-        |> Scheduler.schedule_once(%ReleaseSeat{..}, release_due_at, name: "release")
-      end)
+      alias Commanded.Scheduler
+      alias Commanded.Scheduler.Batch
+
+      batch =
+        reservation_id
+        |> Batch.new()
+        |> Batch.schedule_once(%TimeoutReservation{..}, timeout_due_at, name: "timeout")
+        |> Batch.schedule_once(%ReleaseSeat{..}, release_due_at, name: "release")
+
+      Scheduler.schedule_batch(batch)
 
   """
-  @spec batch(String.t(), (ScheduleBatch.t() -> ScheduleBatch.t())) :: :ok | {:error, term}
+  @spec schedule_batch(ScheduleBatch.t()) :: :ok | {:error, term}
 
-  def batch(schedule_uuid, batch_fn)
-      when is_bitstring(schedule_uuid) and is_function(batch_fn) do
-    %ScheduleBatch{} = schedule_batch = batch_fn.(%ScheduleBatch{schedule_uuid: schedule_uuid})
-
-    Router.dispatch(schedule_batch)
+  def schedule_batch(%ScheduleBatch{} = batch) do
+    Router.dispatch(batch)
   end
 
   @doc """
