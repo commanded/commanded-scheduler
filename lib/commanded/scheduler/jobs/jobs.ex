@@ -35,8 +35,7 @@ defmodule Commanded.Scheduler.Jobs do
   end
 
   @doc """
-  Schedule a named recurring job using the given module, function, args to run
-  repeatedly on the given schedule.
+  Cancel a named scheduled job.
   """
   @spec cancel(any) :: :ok | {:error, reason :: any}
   def cancel(name) do

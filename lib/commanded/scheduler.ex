@@ -12,7 +12,7 @@ defmodule Commanded.Scheduler do
     ScheduleRecurring
   }
 
-  @type schedule :: String.t()
+  @type schedule_uuid :: String.t()
   @type due_at :: DateTime.t() | NaiveDateTime.t()
 
   @doc """
@@ -28,9 +28,9 @@ defmodule Commanded.Scheduler do
       Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 
   """
-  @spec schedule_once(schedule, struct, due_at, name: String.t()) :: :ok | {:error, term}
+  @spec schedule_once(schedule_uuid, struct, due_at, [name: String.t()]) :: :ok | {:error, term}
 
-  def schedule_once(schedule, command, due_at, opts \\ [])
+  def schedule_once(schedule_uuid, command, due_at, opts \\ [])
 
   def schedule_once(schedule_uuid, command, due_at, opts)
       when is_bitstring(schedule_uuid) do
@@ -65,9 +65,9 @@ defmodule Commanded.Scheduler do
       Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "@daily", name: "timeout")
 
   """
-  @spec schedule_recurring(schedule, struct, String.t(), name: String.t()) :: :ok | {:error, term}
+  @spec schedule_recurring(schedule_uuid, struct, String.t(), name: String.t()) :: :ok | {:error, term}
 
-  def schedule_recurring(schedule, command, cron_expression, opts \\ [])
+  def schedule_recurring(schedule_uuid, command, cron_expression, opts \\ [])
 
   def schedule_recurring(schedule_uuid, command, cron_expression, opts)
       when is_bitstring(schedule_uuid) and is_bitstring(cron_expression) do
@@ -109,7 +109,7 @@ defmodule Commanded.Scheduler do
   @doc """
   Cancel a one-off or recurring schedule.
   """
-  @spec cancel_schedule(String.t(), name: String.t()) :: :ok | {:error, term}
+  @spec cancel_schedule(schedule_uuid, name: String.t()) :: :ok | {:error, term}
 
   def cancel_schedule(schedule_uuid, opts \\ [])
 

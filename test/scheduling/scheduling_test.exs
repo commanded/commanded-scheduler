@@ -65,7 +65,7 @@ defmodule Commanded.Scheduling.SchedulingTest do
     %{
       due_at: due_at,
       schedule_uuid: schedule_uuid,
-      schedule_name: name,
+      schedule_name: name
     } = context
 
     trigger_schedule = %TriggerSchedule{
@@ -75,14 +75,13 @@ defmodule Commanded.Scheduling.SchedulingTest do
 
     Wait.until(fn ->
       assert Jobs.scheduled_jobs() == [
-        %OneOffJob{
-          name: {schedule_uuid, name},
-          module: Dispatcher,
-          args: trigger_schedule,
-          run_at: due_at
-        }
-      ]
-
+               %OneOffJob{
+                 name: {schedule_uuid, name},
+                 module: Dispatcher,
+                 args: trigger_schedule,
+                 run_at: due_at
+               }
+             ]
     end)
   end
 end

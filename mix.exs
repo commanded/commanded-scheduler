@@ -6,10 +6,10 @@ defmodule Commanded.Scheduler.Mixfile do
       app: :commanded_scheduler,
       version: "0.1.0",
       elixir: "~> 1.5",
-      elixirc_paths: elixirc_paths(Mix.env),
-      start_permanent: Mix.env == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
+      deps: deps()
     ]
   end
 
@@ -21,29 +21,29 @@ defmodule Commanded.Scheduler.Mixfile do
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do:     ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp aliases do
     [
-      "event_store.reset":  ["event_store.drop", "event_store.create", "event_store.init"],
-      "ecto.setup":         ["ecto.create", "ecto.migrate"],
-      "ecto.reset":         ["ecto.drop", "ecto.setup"],
-      "test":               ["test --no-start"],
-      "test.watch":         ["test.watch --no-start"],
+      "event_store.reset": ["event_store.drop", "event_store.create", "event_store.init"],
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["test --no-start"],
+      "test.watch": ["test.watch --no-start"]
     ]
   end
 
   defp deps do
     [
-      {:commanded, github: "commanded/commanded", runtime: false, override: true},
-      {:commanded_ecto_projections, "~> 0.6"},
+      {:commanded, "~> 0.17.0", runtime: false},
+      {:commanded_ecto_projections, "~> 0.7"},
       {:crontab, "~> 1.1"},
       {:ecto, "~> 2.2"},
       {:ex2ms, "~> 1.5"},
-      {:mix_test_watch, "~> 0.5", only: :dev, runtime: false},
+      {:mix_test_watch, "~> 0.8", only: :dev, runtime: false},
       {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.1"},
-      {:uuid, "~> 1.1"},
+      {:timex, "~> 3.3"},
+      {:uuid, "~> 1.1"}
     ]
   end
 end

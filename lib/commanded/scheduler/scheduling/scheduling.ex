@@ -5,6 +5,8 @@ defmodule Commanded.Scheduler.Scheduling do
 
   require Logger
 
+  alias Commanded.Event.FailureContext
+
   alias Commanded.Scheduler.{
     Dispatcher,
     Jobs,
@@ -85,6 +87,45 @@ defmodule Commanded.Scheduler.Scheduling do
     end
   end
 
+  @doc """
+  Retry on error for the configured number of maximum retries.
+
+  You may override the default number of three retries in config:
+
+      # config/config.exs
+      config :commanded_scheduler, max_retries: 3,
+
+  """
+  def error({:error, error}, event, %FailureContext{} = failure_context) do
+    %FailureContext{context: context, metadata: metadata} = failure_context
+
+    event_id = Map.get(metadata, :event_id)
+    event_number = Map.get(metadata, :event_number)
+    context = Map.update(context, :failures, 1, fn failures -> failures + 1 end)
+    max_retries = max_retries()
+
+    case Map.get(context, :failures) do
+      too_many when too_many >= max_retries ->
+        Logger.error(fn ->
+          "Skipping event " <>
+            inspect(event_id) <>
+            " (##{inspect(event_number)}) due to too many failures: " <> inspect(event)
+        end)
+
+        # Skip problematic event after third failure
+        :skip
+
+      _ ->
+        Logger.warn(fn ->
+          "Failed to handle event " <>
+            inspect(event_id) <> " (##{inspect(event_number)}) due to: " <> inspect(error)
+        end)
+
+        # Retry event, failure count is included in context map
+        {:retry, context}
+    end
+  end
+
   defp schedule_once(schedule_uuid, name, due_at) do
     trigger_schedule = %TriggerSchedule{schedule_uuid: schedule_uuid, name: name}
 
@@ -105,4 +146,6 @@ defmodule Commanded.Scheduler.Scheduling do
     Application.get_env(:commanded_scheduler, :router) ||
       raise "Commanded scheduler expects `:router` to be defined in config"
   end
+
+  defp max_retries, do: Application.get_env(:commanded_scheduler, :max_retries, 3)
 end
