@@ -6,16 +6,18 @@ defmodule Commanded.Scheduler.Projection do
     repo: Commanded.Scheduler.Repo
 
   defmodule Schedule do
+    @moduledoc false
+
     use Ecto.Schema
 
     @primary_key false
     schema "schedules" do
-      field :schedule_uuid, :string, primary_key: true
-      field :name, :string, primary_key: true
-      field :command, :map
-      field :command_type, :string
-      field :due_at, :naive_datetime
-      field :schedule, :string
+      field(:schedule_uuid, :string, primary_key: true)
+      field(:name, :string, primary_key: true)
+      field(:command, :map)
+      field(:command_type, :string)
+      field(:due_at, :naive_datetime)
+      field(:schedule, :string)
 
       timestamps()
     end
@@ -25,8 +27,9 @@ defmodule Commanded.Scheduler.Projection do
     ScheduleCancelled,
     ScheduledOnce,
     ScheduledRecurring,
-    ScheduleTriggered,
+    ScheduleTriggered
   }
+
   alias Commanded.Scheduler.Projection.Schedule
 
   project %ScheduledOnce{} = once do
@@ -43,7 +46,7 @@ defmodule Commanded.Scheduler.Projection do
       name: name,
       command: Map.from_struct(command),
       command_type: command_type,
-      due_at: due_at,
+      due_at: due_at
     })
   end
 
@@ -61,7 +64,7 @@ defmodule Commanded.Scheduler.Projection do
       name: name,
       command: Map.from_struct(command),
       command_type: command_type,
-      schedule: schedule,
+      schedule: schedule
     })
   end
 
@@ -74,7 +77,8 @@ defmodule Commanded.Scheduler.Projection do
   end
 
   defp schedule_query(schedule_uuid, name) do
-    from s in Schedule,
-    where: s.schedule_uuid == ^schedule_uuid and s.name == ^name
+    from(s in Schedule,
+      where: s.schedule_uuid == ^schedule_uuid and s.name == ^name
+    )
   end
 end

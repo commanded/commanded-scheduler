@@ -1,15 +1,19 @@
 defmodule Commanded.Scheduler do
   @moduledoc """
-  One-off and recurring command scheduler for
-  [Commanded](https://hex.pm/packages/commanded) CQRS/ES applications.
+  One-off command scheduler for [Commanded][1] CQRS/ES applications.
+
+  [1]: https://hex.pm/packages/commanded
+
+  - [Getting started](getting-started.html)
+  - [Usage](usage.html)
+
   """
 
   alias Commanded.Scheduler.{
     ScheduleBatch,
     CancelSchedule,
     Router,
-    ScheduleOnce,
-    ScheduleRecurring
+    ScheduleOnce
   }
 
   @type schedule_uuid :: String.t()
@@ -21,14 +25,14 @@ defmodule Commanded.Scheduler do
 
   ## Example
 
-      Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+      Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
 
    Name the scheduled job:
 
-      Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
+      Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 
   """
-  @spec schedule_once(schedule_uuid, struct, due_at, [name: String.t()]) :: :ok | {:error, term}
+  @spec schedule_once(schedule_uuid, struct, due_at, name: String.t()) :: :ok | {:error, term}
 
   def schedule_once(schedule_uuid, command, due_at, opts \\ [])
 
@@ -42,43 +46,6 @@ defmodule Commanded.Scheduler do
     }
 
     Router.dispatch(schedule_once)
-  end
-
-  @doc """
-  Schedule a uniquely identified recurring job using the given command to
-  dispatch repeatedly on the given schedule.
-
-  Schedule supports the cron format where the minute, hour, day of month, month,
-  and day of week (0 - 6, Sunday to Saturday) are specified. An example crontab
-  schedule is "45 23 * * 6". It would trigger at 23:45 (11:45 PM) every Saturday.
-
-  For more details please refer to https://en.wikipedia.org/wiki/Cron
-
-  ## Example
-
-  Schedule a job to run every 15 minutes:
-
-      Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "*/15 * * * *")
-
-  Name the recurring job that runs every day at midnight:
-
-      Scheduler.schedule_recurring(reservation_id, %TimeoutReservation{..}, "@daily", name: "timeout")
-
-  """
-  @spec schedule_recurring(schedule_uuid, struct, String.t(), name: String.t()) :: :ok | {:error, term}
-
-  def schedule_recurring(schedule_uuid, command, cron_expression, opts \\ [])
-
-  def schedule_recurring(schedule_uuid, command, cron_expression, opts)
-      when is_bitstring(schedule_uuid) and is_bitstring(cron_expression) do
-    schedule_recurring = %ScheduleRecurring{
-      schedule_uuid: schedule_uuid,
-      name: name(opts),
-      command: command,
-      schedule: cron_expression
-    }
-
-    Router.dispatch(schedule_recurring)
   end
 
   @doc """

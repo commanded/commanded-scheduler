@@ -36,9 +36,7 @@ defmodule Commanded.Scheduler.Scheduling do
     :ok
   end
 
-  @doc """
-  Schedule the command to be triggered at the given due date/time.
-  """
+  # Schedule the command to be triggered at the given due date/time.
   def handle(%ScheduledOnce{} = event, _metadata) do
     %ScheduledOnce{
       schedule_uuid: schedule_uuid,
@@ -52,10 +50,8 @@ defmodule Commanded.Scheduler.Scheduling do
     schedule_once(schedule_uuid, name, due_at)
   end
 
-  @doc """
-  Execute the command using the configured router when triggered at its
-  scheduled date/time.
-  """
+  # Execute the command using the configured router when triggered at its
+  # scheduled date/time.
   def handle(%ScheduleTriggered{command: command}, metadata) do
     %{
       correlation_id: correlation_id,
@@ -67,10 +63,8 @@ defmodule Commanded.Scheduler.Scheduling do
     router().dispatch(command, causation_id: event_id, correlation_id: correlation_id)
   end
 
-  @doc """
-  Execute the command using the configured router when triggered at its
-  scheduled date/time.
-  """
+  # Execute the command using the configured router when triggered at its
+  # scheduled date/time.
   def handle(%ScheduleCancelled{schedule_uuid: schedule_uuid, name: name}, _metadata) do
     Logger.debug(fn -> "Cancelling scheduled command: #{inspect(schedule_uuid)}" end)
 

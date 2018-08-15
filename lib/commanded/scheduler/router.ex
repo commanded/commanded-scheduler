@@ -9,21 +9,26 @@ defmodule Commanded.Scheduler.Router do
     ScheduleBatch,
     ScheduleOnce,
     ScheduleRecurring,
-    TriggerSchedule,
+    TriggerSchedule
   }
+
   alias Commanded.Scheduler.Schedule
 
-  identify Schedule,
+  identify(Schedule,
     by: :schedule_uuid,
     prefix: &Router.schedule_prefix/0
+  )
 
-  dispatch [
-    CancelSchedule,
-    ScheduleBatch,
-    ScheduleOnce,
-    ScheduleRecurring,
-    TriggerSchedule,
-  ], to: Schedule
+  dispatch(
+    [
+      CancelSchedule,
+      ScheduleBatch,
+      ScheduleOnce,
+      ScheduleRecurring,
+      TriggerSchedule
+    ],
+    to: Schedule
+  )
 
   def schedule_prefix do
     Application.get_env(:commanded_scheduler, :schedule_prefix) || ""
