@@ -81,6 +81,7 @@ defmodule Commanded.Scheduler.Mixfile do
     [
       files: [
         "lib",
+        "priv",
         "mix.exs",
         "README*",
         "LICENSE*",
