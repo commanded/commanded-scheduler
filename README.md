@@ -4,8 +4,8 @@ One-off and recurring command scheduler for [Commanded](https://github.com/comma
 
 Commands can be scheduled in one of two ways:
 
-- Using the `Commanded.Scheduler` module as described in the [Example usage](#example-usage) section.
-- By [dispatching a scheduled command](#dispatch-scheduled-command) using your app's router or from within a process manager.
+- Using the `Commanded.Scheduler` module as described in the [Example usage](guides/Usage.md#usage) section.
+- By [dispatching a scheduled command](guides/Usage.md#dispatch-a-scheduled-command) using your app's router or from within a process manager.
 
 ```elixir
 Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
