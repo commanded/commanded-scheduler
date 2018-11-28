@@ -58,7 +58,7 @@ timeout_reservation = %TimeoutReservation{
 }
 
 schedule_once = %ScheduleOnce{
-  schedule_uuid: ticket_uuid,
+  schedule_uuid: "schedule-" <> ticket_uuid,
   command: timeout_reservation,
   due_at: expires_at,
 }
@@ -86,10 +86,25 @@ defmodule TicketProcessManager do
     %TicketReserved{ticket_uuid: ticket_uuid, expires_at: expires_at})
   do
     %ScheduleOnce{
-      schedule_uuid: ticket_uuid,
+      schedule_uuid: "schedule-" <> ticket_uuid,
       command: %TimeoutReservation{ticket_uuid: ticket_uuid},
       due_at: expires_at
     }
   end
 end
 ```
+
+## Schedule command identity
+
+Note the schedule command *must* use a different `schedule_uuid` from any existing aggregate's identity as it uses event sourcing to store its state. 
+
+You can either:
+
+- assign a random identity (e.g. `schedule_uuid: UUID.uuid4()`); 
+- provide a prefix as above (`schedule_uuid: "schedule-" <> ticket_uuid`);
+- configure a global prefix for all scheduled commands via config
+
+    ```elixir
+    # config/config.exs
+    config :commanded_scheduler, schedule_prefix: "schedule-"
+    ```
