@@ -7,13 +7,13 @@ Schedule a uniquely identified one-off job using the given command to dispatch a
 ### Example
 
 ```elixir
-Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+Commanded.Scheduler.schedule_once("schedule-" <> reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
 ```
 
 Name the scheduled job:
 
 ```elixir
-Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
+Commanded.Scheduler.schedule_once("schedule-" <> reservation_id, %TimeoutReservation{..}, due_at, name: "timeout")
 ```
 
 ## Schedule multiple one-off commands in a single batch
@@ -100,11 +100,49 @@ Note the schedule command *must* use a different `schedule_uuid` from any existi
 
 You can either:
 
-- assign a random identity (e.g. `schedule_uuid: UUID.uuid4()`); 
-- provide a prefix as above (`schedule_uuid: "schedule-" <> ticket_uuid`);
+- assign a random identity (e.g. `UUID.uuid4()`);
+     
+    ```elixir     
+    Commanded.Scheduler.schedule_once(UUID.uuid4(), %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+    ```
+    
+    ```elixir
+    %ScheduleOnce{
+      schedule_uuid: UUID.uuid4(),
+      command: %TimeoutReservation{ticket_uuid: ticket_uuid},
+      due_at: expires_at
+    }
+    ```
+    
+- provide a prefix as above;
+    
+    ```elixir     
+    Commanded.Scheduler.schedule_once("schedule-" <> ticket_uuid, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+    ```
+    
+    ```elixir
+    %ScheduleOnce{
+      schedule_uuid: "schedule-" <> ticket_uuid,
+      command: %TimeoutReservation{ticket_uuid: ticket_uuid},
+      due_at: expires_at
+    }
+    ```
+    
 - configure a global prefix for all scheduled commands via config
 
     ```elixir
     # config/config.exs
-    config :commanded_scheduler, schedule_prefix: "schedule-"
+    config :commanded_scheduler, schedule_prefix: "schedule-"       
+    ```
+    
+    ```elixir     
+    Commanded.Scheduler.schedule_once(ticket_uuid, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
+    ```
+    
+    ```elixir
+    %ScheduleOnce{
+      schedule_uuid: ticket_uuid,
+      command: %TimeoutReservation{ticket_uuid: ticket_uuid},
+      due_at: expires_at
+    }
     ```
