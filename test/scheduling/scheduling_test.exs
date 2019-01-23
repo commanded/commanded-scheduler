@@ -79,7 +79,7 @@ defmodule Commanded.Scheduling.SchedulingTest do
                  name: {schedule_uuid, name},
                  module: Dispatcher,
                  args: trigger_schedule,
-                 run_at: due_at
+                 run_at: NaiveDateTime.truncate(due_at, :second)
                }
              ]
     end)

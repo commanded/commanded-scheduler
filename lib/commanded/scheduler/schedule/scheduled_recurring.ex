@@ -1,6 +1,9 @@
 defmodule Commanded.Scheduler.ScheduledRecurring do
   @moduledoc false
 
+  alias Commanded.Scheduler.Convert
+  alias Commanded.Scheduler.ScheduledRecurring
+
   @type t :: %__MODULE__{
           schedule_uuid: String.t(),
           name: String.t(),
@@ -8,7 +11,7 @@ defmodule Commanded.Scheduler.ScheduledRecurring do
           command_type: String.t(),
           schedule: String.t()
         }
-  @derive [Poison.Encoder]
+  @derive Jason.Encoder
   defstruct [
     :schedule_uuid,
     :name,
@@ -16,17 +19,15 @@ defmodule Commanded.Scheduler.ScheduledRecurring do
     :command_type,
     :schedule
   ]
-end
 
-alias Commanded.Scheduler.{Convert, ScheduledRecurring}
+  defimpl Commanded.Serialization.JsonDecoder do
+    def decode(%ScheduledRecurring{} = recurring) do
+      %ScheduledRecurring{command: command, command_type: command_type} = recurring
 
-defimpl Poison.Decoder, for: ScheduledRecurring do
-  def decode(%ScheduledRecurring{} = recurring, _options) do
-    %ScheduledRecurring{command: command, command_type: command_type} = recurring
-
-    %ScheduledRecurring{
-      recurring
-      | command: Convert.to_struct(command_type, command)
-    }
+      %ScheduledRecurring{
+        recurring
+        | command: Convert.to_struct(command_type, command)
+      }
+    end
   end
 end

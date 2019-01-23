@@ -8,14 +8,14 @@ Commanded scheduler can be installed from hex as follows.
 
     ```elixir
     def deps do
-      [{:commanded_scheduler, "~> 0.1"}]
+      [{:commanded_scheduler, "~> 0.2"}]
     end
     ```
 
 2. Fetch mix dependencies:
 
     ```console
-    $ mix deps.get
+    mix deps.get
     ```
 
 ## Configuration

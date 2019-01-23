@@ -32,7 +32,7 @@ defmodule Commanded.Scheduler.Projection do
 
   alias Commanded.Scheduler.Projection.Schedule
 
-  project %ScheduledOnce{} = once do
+  project %ScheduledOnce{} = once, fn multi ->
     %ScheduledOnce{
       schedule_uuid: schedule_uuid,
       name: name,
@@ -41,16 +41,18 @@ defmodule Commanded.Scheduler.Projection do
       due_at: due_at
     } = once
 
-    Ecto.Multi.insert(multi, :schedule_once, %Schedule{
+    schedule = %Schedule{
       schedule_uuid: schedule_uuid,
       name: name,
       command: Map.from_struct(command),
       command_type: command_type,
-      due_at: due_at
-    })
+      due_at: NaiveDateTime.truncate(due_at, :second)
+    }
+
+    Ecto.Multi.insert(multi, :schedule_once, schedule)
   end
 
-  project %ScheduledRecurring{} = recurring do
+  project %ScheduledRecurring{} = recurring, fn multi ->
     %ScheduledRecurring{
       schedule_uuid: schedule_uuid,
       name: name,
@@ -68,11 +70,11 @@ defmodule Commanded.Scheduler.Projection do
     })
   end
 
-  project %ScheduleCancelled{schedule_uuid: schedule_uuid, name: name} do
+  project %ScheduleCancelled{schedule_uuid: schedule_uuid, name: name}, fn multi ->
     Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid, name))
   end
 
-  project %ScheduleTriggered{schedule_uuid: schedule_uuid, name: name} do
+  project %ScheduleTriggered{schedule_uuid: schedule_uuid, name: name}, fn multi ->
     Ecto.Multi.delete_all(multi, :schedule, schedule_query(schedule_uuid, name))
   end
 

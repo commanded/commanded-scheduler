@@ -1,5 +1,6 @@
 defmodule Commanded.Scheduler.ScheduleTriggered do
   @moduledoc false
+  alias Commanded.Scheduler.{Convert, ScheduleTriggered}
 
   @type t :: %__MODULE__{
           schedule_uuid: String.t(),
@@ -8,24 +9,22 @@ defmodule Commanded.Scheduler.ScheduleTriggered do
           command_type: String.t()
         }
 
-  @derive [Poison.Encoder]
+  @derive Jason.Encoder
   defstruct [
     :schedule_uuid,
     :name,
     :command,
     :command_type
   ]
-end
 
-alias Commanded.Scheduler.{Convert, ScheduleTriggered}
+  defimpl Commanded.Serialization.JsonDecoder do
+    def decode(%ScheduleTriggered{} = triggered) do
+      %ScheduleTriggered{command: command, command_type: command_type} = triggered
 
-defimpl Poison.Decoder, for: ScheduleTriggered do
-  def decode(%ScheduleTriggered{} = triggered, _options) do
-    %ScheduleTriggered{command: command, command_type: command_type} = triggered
-
-    %ScheduleTriggered{
-      triggered
-      | command: Convert.to_struct(command_type, command)
-    }
+      %ScheduleTriggered{
+        triggered
+        | command: Convert.to_struct(command_type, command)
+      }
+    end
   end
 end

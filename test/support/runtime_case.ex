@@ -19,24 +19,20 @@ defmodule Commanded.Scheduler.RuntimeCase do
   end
 
   setup %{conn: conn} do
-    {:ok, event_store} = InMemory.start_link(serializer: JsonSerializer)
+    reset_database!(conn)
 
-    reset_database(conn)
-
-    Application.ensure_all_started(:commanded)
-    Application.ensure_all_started(:commanded_scheduler)
+    {:ok, _} = Application.ensure_all_started(:commanded)
+    {:ok, _} = Application.ensure_all_started(:commanded_scheduler)
 
     on_exit(fn ->
       Application.stop(:commanded_scheduler)
       Application.stop(:commanded)
-
-      ProcessHelper.shutdown(event_store)
     end)
 
     :ok
   end
 
-  defp reset_database(conn) do
+  defp reset_database!(conn) do
     Postgrex.query!(
       conn,
       """

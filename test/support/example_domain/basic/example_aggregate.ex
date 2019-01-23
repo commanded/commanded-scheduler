@@ -2,18 +2,22 @@ defmodule ExampleDomain.ExampleAggregate do
   alias ExampleDomain.ExampleAggregate
 
   defmodule Execute do
+    @derive Jason.Encoder
     defstruct [:aggregate_uuid, :data]
   end
 
   defmodule Error do
+    @derive Jason.Encoder
     defstruct [:aggregate_uuid, :reply_to, :error]
   end
 
   defmodule Raise do
+    @derive Jason.Encoder
     defstruct [:aggregate_uuid, :reply_to, :message]
   end
 
   defmodule Executed do
+    @derive Jason.Encoder
     defstruct [:data]
   end
 

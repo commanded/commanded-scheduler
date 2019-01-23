@@ -42,18 +42,21 @@ defmodule Commanded.Scheduler.Mixfile do
 
   defp deps do
     [
-      {:commanded, "~> 0.17.0", runtime: false},
-      {:commanded_ecto_projections, "~> 0.7"},
+      {:commanded, ">= 0.18.0", runtime: false},
+      {:commanded_ecto_projections, ">= 0.8.0"},
       {:crontab, "~> 1.1"},
-      {:ecto, "~> 2.2"},
+      {:ecto, "~> 3.0"},
+      {:elixir_uuid, "~> 1.2"},
       {:ex2ms, "~> 1.5"},
       {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.3"},
-      {:uuid, "~> 1.1"},
+      {:timex, "~> 3.5"},
+
+      # Optional dependencies
+      {:jason, "~> 1.1", optional: true},
 
       # Build & test tools
-      {:ex_doc, "~> 0.18", only: :dev},
-      {:mix_test_watch, "~> 0.8", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:mix_test_watch, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 

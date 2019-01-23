@@ -1,6 +1,6 @@
 # Commanded scheduler
 
-One-off and recurring command scheduler for [Commanded](https://github.com/commanded/commanded) CQRS/ES applications using [Ecto](https://github.com/elixir-ecto/ecto) for persistence.
+One-off command scheduler for [Commanded](https://github.com/commanded/commanded) CQRS/ES applications using [Ecto](https://github.com/elixir-ecto/ecto) for persistence.
 
 Commands can be scheduled in one of two ways:
 
@@ -10,8 +10,6 @@ Commands can be scheduled in one of two ways:
 ```elixir
 Commanded.Scheduler.schedule_once(reservation_id, %TimeoutReservation{..}, ~N[2020-01-01 12:00:00])
 ```
-
-This library is under active development.
 
 ---
 
@@ -25,7 +23,6 @@ MIT License
 
 - [Getting started](guides/Getting%20Started.md)
 - [Usage](guides/Usage.md)
-
 
 ### Testing
 

@@ -14,11 +14,15 @@ defmodule Commanded.Scheduling.ProjectionTest do
       {:ok, schedule} = get_schedule(context)
 
       assert schedule.name == "timeout_reservation"
+
       assert schedule.command == %{
-        "ticket_uuid" => context.ticket_uuid,
-      }
-      assert schedule.command_type == "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
-      assert schedule.due_at == context.due_at
+               "ticket_uuid" => context.ticket_uuid
+             }
+
+      assert schedule.command_type ==
+               "Elixir.ExampleDomain.TicketBooking.Commands.TimeoutReservation"
+
+      assert schedule.due_at == NaiveDateTime.truncate(context.due_at, :second)
     end
   end
 
@@ -45,7 +49,7 @@ defmodule Commanded.Scheduling.ProjectionTest do
   defp get_schedule(%{schedule_uuid: schedule_uuid, schedule_name: name}) do
     Wait.until(fn ->
       case Repo.get_by(Schedule, schedule_uuid: schedule_uuid, name: name) do
-        nil -> flunk("Schedule #{inspect schedule_uuid} does not exist")
+        nil -> flunk("Schedule #{inspect(schedule_uuid)} does not exist")
         schedule -> {:ok, schedule}
       end
     end)

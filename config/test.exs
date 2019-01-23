@@ -6,8 +6,10 @@ config :ex_unit,
   capture_log: true
 
 config :commanded_scheduler,
-  schedule_interval: 500,           # every 1/2 second
-  router: ExampleDomain.AppRouter   # app composite router
+  # every 1/2 second
+  schedule_interval: 500,
+  # app composite router
+  router: ExampleDomain.AppRouter
 
 config :commanded_scheduler, Commanded.Scheduler.Repo,
   adapter: Ecto.Adapters.Postgres,
@@ -16,5 +18,7 @@ config :commanded_scheduler, Commanded.Scheduler.Repo,
   password: "postgres",
   hostname: "localhost"
 
-config :commanded,
-  event_store_adapter: Commanded.EventStore.Adapters.InMemory
+config :commanded, event_store_adapter: Commanded.EventStore.Adapters.InMemory
+
+config :commanded, Commanded.EventStore.Adapters.InMemory,
+  serializer: Commanded.Serialization.JsonSerializer
