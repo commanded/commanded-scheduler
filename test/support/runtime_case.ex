@@ -3,10 +3,7 @@ defmodule Commanded.Scheduler.RuntimeCase do
 
   use ExUnit.CaseTemplate
 
-  alias Commanded.EventStore.Adapters.InMemory
-  alias Commanded.Helpers.ProcessHelper
   alias Commanded.Scheduler.Repo
-  alias Commanded.Serialization.JsonSerializer
 
   setup_all do
     database_config = Application.get_env(:commanded_scheduler, Repo)
