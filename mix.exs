@@ -75,6 +75,7 @@ defmodule Commanded.Scheduler.Mixfile do
       extras: [
         "guides/Getting Started.md",
         "guides/Usage.md",
+        "guides/Testing.md",
         "CHANGELOG.md"
       ]
     ]

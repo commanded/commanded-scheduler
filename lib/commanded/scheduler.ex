@@ -6,6 +6,7 @@ defmodule Commanded.Scheduler do
 
   - [Getting started](getting-started.html)
   - [Usage](usage.html)
+  - [Testing](testing.html)
 
   """
 
