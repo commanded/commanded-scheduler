@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1
+
+### Bug fixes
+
+- Define `adapter` in Ecto Repo module.
+
 ## v0.2.0
 
 ### Enhancements
