@@ -18,7 +18,34 @@ config :commanded_scheduler, Commanded.Scheduler.Repo,
   password: "postgres",
   hostname: "localhost"
 
+# In-memory event store tests
 config :commanded, event_store_adapter: Commanded.EventStore.Adapters.InMemory
 
 config :commanded, Commanded.EventStore.Adapters.InMemory,
   serializer: Commanded.Serialization.JsonSerializer
+
+## EventStore `bytea` tests
+# config :commanded, event_store_adapter: Commanded.EventStore.Adapters.EventStore
+
+config :eventstore, EventStore.Storage,
+  serializer: JsonSerializer,
+  types: EventStore.PostgresTypes,
+  username: "postgres",
+  password: "postgres",
+  database: "eventstore_jsonb_test",
+  # database: "eventstore_test",
+  hostname: "localhost",
+  pool_size: 1
+
+## EventStore `jsonb` tests
+# config :commanded, event_store_adapter: Commanded.EventStore.Adapters.EventStore
+# config :eventstore, column_data_type: "jsonb"
+#
+# config :eventstore, EventStore.Storage,
+#   serializer: JsonbSerializer,
+#   types: EventStore.PostgresTypes,
+#   username: "postgres",
+#   password: "postgres",
+#   database: "eventstore_jsonb_test",
+#   hostname: "localhost",
+#   pool_size: 1

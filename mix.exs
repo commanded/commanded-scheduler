@@ -42,14 +42,15 @@ defmodule Commanded.Scheduler.Mixfile do
 
   defp deps do
     [
-      {:commanded, ">= 0.18.0", runtime: false},
+      {:commanded, ">= 0.19.0", runtime: false},
       {:commanded_ecto_projections, ">= 0.8.0"},
+      {:commanded_eventstore_adapter, "~> 0.6"},
       {:crontab, "~> 1.1"},
       {:ecto, "~> 3.1"},
       {:elixir_uuid, "~> 1.2"},
       {:ex2ms, "~> 1.5"},
       {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.5"},
+      {:timex, "~> 3.6"},
 
       # Optional dependencies
       {:jason, "~> 1.1", optional: true},

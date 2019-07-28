@@ -12,18 +12,27 @@ defmodule Commanded.Scheduler.RuntimeCase do
 
     {:ok, conn} = Postgrex.start_link(database_config)
 
-    [conn: conn]
+    {:ok, es} =
+      EventStore.configuration()
+      |> EventStore.Config.parse()
+      |> EventStore.Config.default_postgrex_opts()
+      |> Postgrex.start_link()
+
+    [conn: conn, es: es]
   end
 
-  setup %{conn: conn} do
+  setup %{conn: conn, es: es} do
     reset_database!(conn)
+    reset_eventstore!(es)
 
+    {:ok, _} = Application.ensure_all_started(:eventstore)
     {:ok, _} = Application.ensure_all_started(:commanded)
     {:ok, _} = Application.ensure_all_started(:commanded_scheduler)
 
     on_exit(fn ->
       Application.stop(:commanded_scheduler)
       Application.stop(:commanded)
+      Application.stop(:eventstore)
     end)
 
     :ok
@@ -40,5 +49,9 @@ defmodule Commanded.Scheduler.RuntimeCase do
       """,
       []
     )
+  end
+
+  defp reset_eventstore!(conn) do
+    EventStore.Storage.Initializer.reset!(conn)
   end
 end
