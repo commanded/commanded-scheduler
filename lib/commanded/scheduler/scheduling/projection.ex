@@ -3,7 +3,8 @@ defmodule Commanded.Scheduler.Projection do
 
   use Commanded.Projections.Ecto,
     name: "Commanded.Scheduler.Projection",
-    repo: Commanded.Scheduler.Repo
+    repo: Commanded.Scheduler.Repo,
+    application: Application.get_env(:commanded_scheduler, :application)
 
   defmodule Schedule do
     @moduledoc false

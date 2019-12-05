@@ -6,17 +6,17 @@ Commanded scheduler can be installed from hex as follows.
 
 1. Add `commanded_scheduler` to your list of dependencies in `mix.exs`:
 
-    ```elixir
-    def deps do
-      [{:commanded_scheduler, "~> 0.2"}]
-    end
-    ```
+   ```elixir
+   def deps do
+     [{:commanded_scheduler, "~> 0.2"}]
+   end
+   ```
 
 2. Fetch mix dependencies:
 
-    ```console
-    mix deps.get
-    ```
+   ```console
+   mix deps.get
+   ```
 
 ## Configuration
 
@@ -36,6 +36,15 @@ config :commanded_scheduler, Commanded.Scheduler.Repo,
 ```
 
 You can use an existing database for the Scheduler. It will create a table named `schedules` to store scheduled commands and a `projection_versions`, if not present, used for Commanded's read model projections.
+
+You must also specify which commanded application to use with scheduler.
+
+```elixir
+config :commanded_scheduler,
+  application: QMES.Application
+```
+
+At this time, :commanded_scheduler only supports one application at a time.
 
 ### Create Commanded scheduler database
 

@@ -1,7 +1,9 @@
 defmodule Commanded.Scheduler.Scheduling do
   @moduledoc false
 
-  use Commanded.Event.Handler, name: "Commanded.Scheduler.Scheduling"
+  use Commanded.Event.Handler,
+    name: "Commanded.Scheduler.Scheduling",
+    application: Application.get_env(:commanded_scheduler, :application)
 
   require Logger
 
