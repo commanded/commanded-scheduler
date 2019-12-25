@@ -69,3 +69,13 @@ Then using Ecto's mix tasks will include the Commanded scheduler repository at t
 ```console
 mix do ecto.create, ecto.migrate
 ```
+
+To handle migrations in production (since mix is not accessible in a release) then you will need to add this as a release task.
+```elixir
+def migrate_database() do
+ Ecto.Migrator.with_repo(Commanded.Scheduler.Repo, fn repo ->
+   path = Ecto.Migrator.migrations_path(repo)
+   Ecto.Migrator.run(repo, path, :up, [all: true])
+ end)
+end
+```
